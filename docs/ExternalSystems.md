@@ -35,8 +35,7 @@
    - Profile
    - Account Status
    - Payments
- - Customer Communication
-   - Email notifications to categories of Customers
+   - Email Messaging 
  - Product Maintenance
    - Product & Subscription data
    - Data that Drives the application.
