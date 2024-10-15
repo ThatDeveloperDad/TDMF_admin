@@ -1,4 +1,4 @@
-[Back](/docs/UseCases.md "Back to Use Case List")
+<div style="text-align:right;">[Back](/docs/UseCases.md "Back to Use Case List")</div>
 # New Customer Signup
 
 **When a person Signs Up for the first time...**
