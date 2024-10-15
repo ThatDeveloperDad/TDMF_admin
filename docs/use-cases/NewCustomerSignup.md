@@ -19,7 +19,13 @@
 3. Admin API receives the Event Data and:
   * Validates the inbound data for Correctness.  (We need this phase in place, even though we havent imagined the scenarios where this data would be invalid yet.)
 
-**IF SUBSCRIPTION IS VALID**
+**IF NEW SUBSCRIPTION PURCHASED EVENT DATA IS VALID**
 1. Create User Subscription Record in database.
 2. Create UserQuota records in database.
 3. Send a Thank You & Getting Started email via the ecommerce service.
+
+**IF ECOMMERCE TRANSACTION IS NOT SUCCESSFUL**
+*(Not specified yet.  This part of the requirement needs to be a Business level decision that I'll think about and document once I've got some ideas.)*
+
+**IF NEW SUBSCRIPTION PURCHASED EVENT DATA IS NOT VALID**
+*(Not yet determined.  Need to research what could be coming in from the Ecom Service, and in which ways might this data be invalid.  Also... What is the "rollback" mechanism w/ the Ecom Service if MY system is unable to complete the transaction for that customer, and how can I prevent that disconnect?)*
