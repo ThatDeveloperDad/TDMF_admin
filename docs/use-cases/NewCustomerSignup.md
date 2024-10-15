@@ -1,6 +1,5 @@
-<div style="text-align:right;">[Back](/docs/UseCases.md "Back to Use Case List")</div>
 # New Customer Signup
-
+[Back](/docs/UseCases.md "Back to Use Case List")  
 **When a person Signs Up for the first time...**
 
 1. Person navigates to site.
