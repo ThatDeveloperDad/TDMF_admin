@@ -14,7 +14,7 @@
   - Signs up for the first time
   - Renews their monthly subscription
   - Pauses their monthly subscription
-  - Discontinues their monthly subscription (at end of current biulling period)
+  - Discontinues their monthly subscription (at end of current billing period)
   - Cancels their subscription with pro-rated refund (immediately)
     - Hopefully, this will be an exception case.  This gets complicated.
 
