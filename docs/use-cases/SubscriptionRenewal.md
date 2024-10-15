@@ -7,7 +7,7 @@
 2. E-Com Services sends a notification to This System about the transaction attempt via WebHook call.
 3. WebHook code verifies the source of the message, and validates that the message data is well-formed.
 
-**IF THE WEBHOOM INVOCATION IS NOT VERIFIED AS FROM AN EXPECTED SENDER (Unhappy Path)**
+**IF THE WEBHOOK INVOCATION IS NOT VERIFIED AS FROM AN EXPECTED SENDER (Unhappy Path)**
 Webhook shall return the appropriate HTTP Code.  Most likely a 400 (Bad Request), a 403 (Forbidden)  
 The API Documentation for the Ecommerce Service may specify which error codes are expected from these WebHook Calls.
 Unverified Sender event should be logged w/ any information we can get about the HTTP Request.
