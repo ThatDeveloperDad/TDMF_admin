@@ -11,7 +11,7 @@
 
 ## This subsystem needs to:
 - Handle the backend Tasks that occur when a Customer:
-  - Signs up for the first time
+  - Signs up for the first time [NewCustomerSignup](/use-cases/NewCustomerSignup.md "Detailed new Customer Signup Steps")
   - Renews their monthly subscription
   - Pauses their monthly subscription
   - Discontinues their monthly subscription (at end of current billing period)
