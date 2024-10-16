@@ -29,7 +29,8 @@
   * Set Subscription Status to Paused.
   * Set Subscription Renewal Date to NULL  (maybe)
   * Need to make the Product code aware that a subscription may have different Statuses.
-   * Must block access to Paid Features during the "Paused" time.
+  * Must block access to Paid Features during the "Paused" time.
+   * Remove the User's Identity record from the appropriate "Paid" user groups in the ID system.
 2. Send an email to the Customer notifying them that their subscription has been Paused, will Resume on (DATE), and that their new Billing Date will be (Recalculated Billing Date)
 
 ### Receive SubscriptionResumed (sic) event at WebHook
