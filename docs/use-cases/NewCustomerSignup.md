@@ -22,7 +22,8 @@
 **IF NEW SUBSCRIPTION PURCHASED EVENT DATA IS VALID (Happy Path)**  
 1. Create User Subscription Record in database.
 2. Create UserQuota records in database.
-3. Send a Thank You & Getting Started email via the ecommerce service.
+3. Add the User's Identity to the appropriate User Groups, as defined for the selected Subscription Type.
+4. Send a Thank You & Getting Started email via the ecommerce service.
 
 **IF ECOMMERCE TRANSACTION IS NOT SUCCESSFUL (Unhappy Path)**  
 *(Not specified yet.  This part of the requirement needs to be a Business level decision that I'll think about and document once I've got some ideas.)*
