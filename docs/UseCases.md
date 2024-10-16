@@ -15,7 +15,7 @@
   - Renews their monthly subscription  [Subscription Renewal](/docs/use-cases/SubscriptionRenewal.md "Detailed Subscription Renewal Steps")
   - Pauses their monthly subscription [Pause and Resume Subscription](/docs/use-cases/PauseAndResumeSubscription.md "Detailed Pause and Resume Steps")
   - Discontinues their monthly subscription (at end of current billing period)[Discontinue Subscription](/docs/use-cases/DiscontinueSubscription.md "Detailed Discontinue Steps")
-  - Cancels their subscription with pro-rated refund (immediately)
+  - Cancels their subscription with pro-rated refund (immediately) [Cancel Subscription](/docs/use-cases/CancelSubscription.md "Detailed Cancel Subscription Steps")
     - Hopefully, this will be an exception case.  This gets complicated.
 
 - Allow a system administrator to:
