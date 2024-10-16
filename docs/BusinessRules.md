@@ -3,6 +3,7 @@
 ---
 ## Paid vs. Free Decision Guidelines
 **In General, any activity in the Product that consumes paid compute resources shall be available only to Paid Users.**
+**If a particular future feature carries a High Value, consider making it a Paid-Only feature, regardless of whether it consumes Pay-As-You-Go resources or not.**
 
 ### Cost-Controlled Features
 * Generate AI Description of Item (currently only commoner NPCs)
