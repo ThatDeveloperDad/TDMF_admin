@@ -13,8 +13,8 @@
 - Handle the backend Tasks that occur when a Customer:
   - Signs up for the first time  [New Customer Signup](/docs/use-cases/NewCustomerSignup.md "Detailed new Customer Signup Steps")
   - Renews their monthly subscription  [Subscription Renewal](/docs/use-cases/SubscriptionRenewal.md "Detailed Subscription Renewal Steps")
-  - Pauses their monthly subscription
-  - Discontinues their monthly subscription (at end of current billing period)
+  - Pauses their monthly subscription [Pause and Resume Subscription](/docs/use-cases/PauseAndResumeSubscription.md "Detailed Pause and Resume Steps")
+  - Discontinues their monthly subscription (at end of current billing period)[Discontinue Subscription](/docs/use-cases/DiscontinueSubscription.md "Detailed Discontinue Steps")
   - Cancels their subscription with pro-rated refund (immediately)
     - Hopefully, this will be an exception case.  This gets complicated.
 
