@@ -19,10 +19,10 @@
 2. Webhook verifies the sender of ther Event.
  1. If sender is not verified, return either HTTP400 or HTTP403 (per Third Party Service's Documentation)
  2. If Sender IS verified, validate that the Event Data is well-formed, and correctly formatted.
-  1. If Event Data is NOT well-formed, return HTTP400 to EcomService (need to confirm this with their Documentation)
+  1. If Event Data IS NOT well-formed, return HTTP400 to EcomService (need to confirm this with their Documentation)
   2. If Event Data IS Valid, forward to the Administrative API
 
-### Receive SubscriptionPaused event at the Administrative API<sep>2</sup>
+### Receive SubscriptionPaused event at the Administrative API<sup>2</sup>
 1. Validate that the Data in the Request is Correct for the affected Customer and Product.
  1. If Not Valid, Log & (Do something with the ECom System to roll back that change.  Review Docs for details.)
  2. If Valid, Update the Customer's Subscription & Quota records in the Product's local database.
