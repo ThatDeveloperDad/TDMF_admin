@@ -26,7 +26,7 @@
 * Initially, we will offer a single Tier of Paid Subscription.
   * The subscription period will be 30 days, exact billing schedule details are managed by the E-Commerce Service.
 * When a Customer Discontinues their Subscription, they will retain access to the Paid services through the last day of their currently paid period.  After that date passes, the Customer will become a Free customer, and have access only to those Features.
-* When a Customer CANCELS their subscription, they will receive a pro-rated refund based on how many days they have remaining in their current billing period, and revert to a Free Customer status immediately.
+* When a Customer CANCELS their subscription, they will receive a pro-rated refund based on how many days they have remaining in their current billing period, adjusted for Quota Consumption, and revert to a Free Customer status immediately.
   * May need to impose a fee on this to cover transaction costs with the E-Commerce Service.
 * A customer can PAUSE their Paid subscription.
   * Consider limiting how many times a subscription can be paused during a year's period.  (Trailing, perhaps?)
