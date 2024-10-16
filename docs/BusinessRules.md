@@ -19,7 +19,7 @@
 ---
 ## Subscription Guidelines
 
-* All users with a Login & Profile will have access tot he "Free" Features for as long as The Product exists.
+* All users with a Login & Profile will have access to the "Free" Features for as long as The Product exists.
 * There will be no Trial or Free period for the Paid Features.
 * Initially, we will offer a single Tier of Paid Subscription.
   * The subscription period will be 30 days, exact billing schedule details are managed by the E-Commerce Service.
@@ -29,4 +29,10 @@
 * A customer can PAUSE their Paid subscription.
   * Consider limiting how many times a subscription can be paused during a year's period.  (Trailing, perhaps?)
   * Consider limiting the LENGTH of this pause to less than a full billing period.
-  * During the time a subscription is Paused, 
+  * During the time a subscription is Paused, the Customer can access the Free features.
+  * When the Subscription resumes, access to the Paid features is restored, and the next billing date is calculated from RestoreDate + Days Remaining when the subscription was paused.
+
+
+## Brainstormed Ideas
+* Consider exporting a small handful of NPCs that I've generated for my own purposes, (and later, other Game World Items) in a monthly newsletter to anyone in the User list who is not a current subscriber.
+* PERHAPS compile a digest of NPCs and other World Items that I've created during my own usage into a yearly PDF for sale as a one-time purchase???  Hmmm... (Sell the Gravy)
