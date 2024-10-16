@@ -26,6 +26,10 @@
 1. Validate that the Data in the Request is Correct for the affected Customer and Product.
  1. If Not Valid, Log & (Do something with the ECom System to roll back that change.  Review Docs for details.)
  2. If Valid, Update the Customer's Subscription & Quota records in the Product's local database.
+  * Set Subscription Status to Paused.
+  * Set Subscription Renewal Date to NULL  (maybe)
+  * Need to make the Product code aware that a subscription may have different Statuses.
+   * Must block access to Paid Features during the "Paused" time.
 2. Send an email to the Customer notifying them that their subscription has been Paused, will Resume on (DATE), and that their new Billing Date will be (Recalculated Billing Date)
 
 ### Receive SubscriptionResumed (sic) event at WebHook
@@ -33,8 +37,14 @@
 2. Upon verification and validation, forward to appropriate Endpoint on the Administrative API
 
 ### Receive SubscriptionResumed event at Administrative API
+1. Validate that the Data in the Request is Correct for the requested operation on the supplied Customer & Subscription identifiers.
+2. Calculate the new billing date for the Subscription Renewal date.
+3. Update the Subscription Status to be Active once more.
+4. Restore the Quota Data to the values it had when it was paused.
 
 ### Send PauseSubscription command from Admin System
+1. Find Customer, Identify Subscription to be Paused.
+2. Send a request to the E-Commerce System's API to "pause" the identified subscription.
 
 ### Footnotes:
 1. If possible via the Ecom Service, limit the duration that a Subscription can be paused.  Also limit the number of times that a subscription may be paused during a year.  (Need to define year.  Calendar year, or trailing 12-month period?)
