@@ -30,6 +30,6 @@
 3. If Valid:
   1. Update the Customer's Subscription object to stop billing and updating the Quota on the day after their last Paid day.
 
-### Reconcile Expiring Subscriptions with the Identity Service.
+### Reconcile Expired Subscriptions with the Identity Service.
 1. On a Daily basis, we need to retrieve a list of Users who no longer belong in the PaidUsers groups in the Identity Service.
 2. Remove any of the users that have been identified buthave not yet been removed.
