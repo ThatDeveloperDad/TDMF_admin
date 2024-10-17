@@ -118,14 +118,14 @@ In this case, only the speciesList is a required input value.  The profession an
 Plain language:  When the required input or expected Output from a prompt changes, we'll need to update the code to account for those material changes, or things will crash.  
 
 **New Functions**
-Create the FunctionDefinition object, using V1 as the version string.
-Save it through the Product's AiFunction storage provider.
+Create the FunctionDefinition object, using V1 as the version string.  
+Save it through the Product's AiFunction storage provider.  
 
 **Existing Functions**
-Compare the Variable lists between the "New" version, and the "Old" version.
-If the REQUIRED Variables or Expected Output Format have changed, Treat as a major Version increment.
-If the OPTIONAL variables have changed and Output Format has not, Treat as a Minor Version increment.
-If only the instructions within the prompt have changed, Increment as a Patch.
-Save the updated FunctionDefinition through the Product's AiFunction Storage Provider.
+Compare the Variable lists between the "New" version, and the "Old" version.  
+If the REQUIRED Variables or Expected Output Format have changed, Treat as a major Version increment.  
+If the OPTIONAL variables have changed and Output Format has not, Treat as a Minor Version increment.  
+If only the instructions within the prompt have changed, Increment as a Patch.  
+Save the updated FunctionDefinition through the Product's AiFunction Storage Provider.  
 
 
