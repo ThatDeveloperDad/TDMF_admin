@@ -10,7 +10,8 @@
 3. The Prorate amount is calculated <sup>1</sup>
 4. The Refund is made to the Customer by the ECom System.
 5. Upon completion of that activity, the ECom Service will notify the Admin Service via WebHook.
-6. The Admin Service will zero out any remaining quotas, immedaitely remove that user from the Paid Access groups.
+6. The Admin Service will zero out any remaining quotas, immediately remove that user from the Paid Access groups.
+7. Send a "We're sorry to see you go, but 
 
 ### Footnotes
 1. Proration calculation should consider any Quotaed Usage during the period being pro-rated.
@@ -27,7 +28,21 @@
   1. If Not Valid, return error code to sender.
   2. If Valid, Forward the Request to the Administrative API.
 
-### CalculateRefund Request arrives at Administrative API (???)
-
 ### CancelSubscription event arrives at Administrative API
+1. Retrieve the identified User and Subscription data from storage.
+2. Validate the request data against the user's current subscription state.
+ * Make sure that the incoming data is "Correct" for making the requested change to the User's Subscription.
+ * If the request data IS NOT correct, perform some kind of compensating activity against the E-Com System.
+ * If the request Data IS correct, proceed with the Cancel Subscription Activity.
+3. Update the Customer's Subscription to end TODAY.
+   Zero out any remaining Quota allocations.
+   Remove the customer from the IdP User Groups that allow access to the Paid Features of the application.
+4. Send the "Sorry to see you go" email and explain that access has been revoked.   
 
+### CalculateRefund Request arrives at Administrative API (???)
+1. DaysRemining =  number of Days remaining in the current Billing Cycle.
+2. ConsumptionFactor = percentage of their Token Allotment that has been consumed.
+3. RefundableAmount = Calculate the Amount they paid, minus the Transaction Fees.
+4. ProRated = RefundableAmount - (DaysRemaining * PricePerDay)  (Floor is Zero)
+5. Refund = ProRated - (ProRated * ConsumptionFactor).
+**Test This Reasoning before committing**
