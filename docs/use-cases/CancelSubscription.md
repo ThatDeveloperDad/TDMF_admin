@@ -44,5 +44,5 @@
 2. ConsumptionFactor = percentage of their Token Allotment that has been consumed.
 3. RefundableAmount = Calculate the Amount they paid, minus the Transaction Fees.
 4. ProRated = RefundableAmount - (DaysRemaining * PricePerDay)  (Floor is Zero)
-5. Refund = ProRated - (ProRated * ConsumptionFactor).
-**Test This Reasoning before committing**
+5. Refund = (ProRated * ConsumptionFactor)-Fees  (Minimum value of refund is $0.00; no negative refund amounts).
+
