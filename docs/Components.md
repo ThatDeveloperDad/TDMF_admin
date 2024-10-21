@@ -52,4 +52,4 @@
   Is NOT the Source of Truth for Identity, or Subscription Status.
 
 ## Static Architecture
-![A Static Architecture Diagram for a SaaS product Admin System](docs/images/AdminSystem_StaticArch.png "Admin Static Architecture")
+![A Static Architecture Diagram for a SaaS product Admin System](/images/AdminSystem_StaticArch.png "Admin Static Architecture")
