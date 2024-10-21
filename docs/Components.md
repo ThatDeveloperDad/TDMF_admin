@@ -50,3 +50,6 @@
   Is the Local Database that holds the information necessary to operate the Product when being used by a Subscriber.
   Is A system of record, but mostly for reference during day-to-day operations.
   Is NOT the Source of Truth for Identity, or Subscription Status.
+
+## Static Architecture
+![A Static Architecture Diagram for a SaaS product Admin System](docs/images/AdminSystem_StaticArch.png "Admin Static Architecture")
