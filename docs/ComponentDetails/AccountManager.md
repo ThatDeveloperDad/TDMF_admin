@@ -41,15 +41,15 @@ This component will use the internal engines and resource access components to c
   * Add the user to the "Paid Users" group in Entra.
   * Enqueue a "Welcome Back" email w/ new Billing date, and current quota amounts.
 * DiscontinueSubscription
- * Validate the Request Data for correctness against the current Custoemr & Subscription states.
- * Set the "will renew" flag on the subcription to false.
- * Send a "We're going to miss you!" email with an explanation of what will happen when, and what access the custoemr will retain after their current paid time elapses.
+  * Validate the Request Data for correctness against the current Custoemr & Subscription states.
+  * Set the "will renew" flag on the subcription to false.
+  * Send a "We're going to miss you!" email with an explanation of what will happen when, and what access the custoemr will retain after their current paid time elapses.
 * CancelSubscription
- * Validate the request against current state.
- * Set the ActiveThrough date to end of day for moment of execution.
- * Sets any Quotas to "Fully Consumed"
- * Removes the user from the "Paid Users" group in Entra.
- * Send a "We're sorry to see you go, maybe we can still be friends" email explaining that their Paid access has been removed, but they will retain read access to anything they've created for a period of time.
+  * Validate the request against current state.
+  * Set the ActiveThrough date to end of day for moment of execution.
+  * Sets any Quotas to "Fully Consumed"
+  * Removes the user from the "Paid Users" group in Entra.
+  * Send a "We're sorry to see you go, maybe we can still be friends" email explaining that their Paid access has been removed, but they will retain read access to anything they've created for a period of time.
 * CalculateProrate
- * *Will I need this?*
- * Spec this out IF REQUIRED.
+  * *Will I need this?*
+  * Spec this out IF REQUIRED.
