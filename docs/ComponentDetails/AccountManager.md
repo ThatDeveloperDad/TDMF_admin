@@ -43,9 +43,21 @@ This component composes the programmed Tasks and Steps into Business Activities 
  * TddSaasAdmin.Managers.CustomerAccount (root)
    * We'll put the default AccountManager implementation here.
  * TddSaasAdmin.Managers.CustomerAccount.Public (folder; ONLY public interfaces and class definitions)
+   * This folder will hold any interfaces or Data Classes that specify the protocols to be used by calling components.
+   * These protocols may include:  Data Transfer Objects (simple .Net POCOs) or ServiceContracts (.Net Interfaces)
  * TddSaasAdmin.Managers.CustomerAccount.Strategies (folder; ONLY internal interfaces & implementations)
- * 
+   * We'll put the individual Strategy implementations for the different Subscription Actions in here.
 
 ### Interfaces
- * public ICustomerAccountManager
- * internal IStrategyHandler<IStrategy\<T\>> where T: SystemObject
+#### public ICustomerAccountManager
+
+**Dependencies**
+ * IValidator
+ * ICustomerAccess
+ * ISubscriptionAccess
+ * IShopGateway
+ * IProrater
+
+**Methods**
+
+ 
