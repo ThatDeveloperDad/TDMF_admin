@@ -1,9 +1,17 @@
 # System Components for the Admin Subsystem.
 
-## Presentation
+## Presentation / Clients
 *  **Webhooks**  
   (Azure Function App)
   High Priority
+
+* **ScheduledTask Runner**
+  Next priority after Webhooks.
+  There are Processes we'll need to run on a daily / weekly / monthly basis that don't fit in the existing Use Cases.
+  These things include Groupmembership reconcilitation.
+  userData Cleanup (for user-deletied Items, and ex-user data)
+    User Deleted Items will be deleted from the database after **N** days.
+    Items belonging to discontinued users will be Exported to **Format** files and Emailed to those users after **X** days, then deleted after **X+Y** days.
 
 * **Admin UI**
   (Blazor?  MAUI?  AspNetCore MVC???)
