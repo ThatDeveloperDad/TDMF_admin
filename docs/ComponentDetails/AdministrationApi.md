@@ -5,7 +5,9 @@ Exposes specific functionality for the system as callable endpoint methods that 
 NOTE:  This API *may* not need to be exposed to the public internet.  If it's not neccessary to do so, do not expose it.
 ALSO:  Whether it's exposed to the Internet or not, DO require secure and correctly authenticated and authorized connections on these endpoints.
 
-## Behaviors
+## Normal Person Documentation
+
+### Behaviors
 * **CreateCustomerProfile**
   * Sets up a User Profile for a newly signed up user.
   * Adds that user to the "Free" group in Entra.
@@ -56,3 +58,18 @@ ALSO:  Whether it's exposed to the Internet or not, DO require secure and correc
 * **CalculateCustomerProrate**
   * *Will I need this?*
   * Spec this out IF REQUIRED.
+
+---
+## Nerd Stuff
+
+### Purpose:
+Authenticates the incoming Request.
+Analyzes the Request and forwards it to the appropriate Manager operation.
+
+### Implementation:
+ * ASP .Net Core WebAPI.  (Likely using MinimalAPI)
+ * Configures an IAccountManager instance as the target for the API Call Routing.
+ * Passes configuration data to the Manager on Dependency Resolution.
+   * Manager is responsible for instantiating its own Dependencies, based on the provided Configuration.
+ * Manager will expose a DI Constructor that is to be used only when the Operational Context of the API is NOT Production-Operation.
+   * i.e.:  Test Scenarios. 
