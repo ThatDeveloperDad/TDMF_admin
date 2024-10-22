@@ -63,6 +63,7 @@ This component composes the programmed Tasks and Steps into Business Activities 
    * Forwards that data to the matching Strategy implementation.
 
 ### public enum ActionKind
+*Note:  This concept is subject to change.  I'm not sure I like it.*
  * Identifies the different Actions that can be performed against the incoming SubscriptionData
  * Current ActionKinds include:
    * Provision
@@ -70,8 +71,7 @@ This component composes the programmed Tasks and Steps into Business Activities 
    * Pause
    * Resume
    * Discontinue
-   * Cancel  
- *Note:  This concept is subject to change.  I'm not sure I like it.*
+   * Cancel
 
 ### Implementations
  
