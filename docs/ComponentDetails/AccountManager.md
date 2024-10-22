@@ -19,7 +19,7 @@ This component composes the programmed Tasks and Steps into Business Activities 
   * Deferred.  Only needed for an AdminUI program.
 
 * **ManageCustomerSubscription**
- * Accepts the inbound data for a CustomerSubcription manipulation, and an ActivityContext identifier.
+ * Accepts the inbound data for a CustomerSubcription manipulation and an ActivityContext identifier.
  * Validates that inbound data against the necessary Current states for the objects being manipulated.
  * Runs whichever Strategy is identified by the Activity Context.
    * Known ActivityContexts:
