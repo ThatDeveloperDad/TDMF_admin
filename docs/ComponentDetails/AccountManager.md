@@ -70,7 +70,7 @@ This component composes the programmed Tasks and Steps into Business Activities 
    * Pause
    * Resume
    * Discontinue
-   * Cancel
+   * Cancel  
  *Note:  This concept is subject to change.  I'm not sure I like it.*
 
 ### Implementations
