@@ -67,9 +67,16 @@ Authenticates the incoming Request.
 Analyzes the Request and forwards it to the appropriate Manager operation.
 
 ### Implementation:
- * ASP .Net Core WebAPI.  (Likely using MinimalAPI)
- * Configures an IAccountManager instance as the target for the API Call Routing.
- * Passes configuration data to the Manager on Dependency Resolution.
-   * Manager is responsible for instantiating its own Dependencies, based on the provided Configuration.
- * Manager will expose a DI Constructor that is to be used only when the Operational Context of the API is NOT Production-Operation.
-   * i.e.:  Test Scenarios. 
+**Technology** ASP .Net Core WebAPI.  (Likely using MinimalAPI)
+**Hosting** Azure App Service(???)
+**Exposure** Non-public to start.  MAY need to expose publicly, depending on what kind of UI Application I decide to roll.
+
+ #### Direct Dependencies
+ * Logging
+ * OAuth for Authentication/Authorization
+ * Configuration (use environment vars, rather than AppConfig.json strategy)
+ * IAccountManager
+   * Passes configuration data to the Manager on Dependency Resolution.
+     * Manager is responsible for instantiating its own Dependencies, based on the provided Configuration.
+   * Manager will expose a DI Constructor that is to be used only when the Operational Context of the API is NOT Production-Operation.
+     * i.e.:  Test Scenarios. 
