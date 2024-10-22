@@ -14,6 +14,6 @@
  * IStrategyHandler<T> for each SystemObject the Manager deals with.
  * IProxyFactory will be a dictionary of <string, Type>
    * WHERE:
-     * string is the nameof(depoendencyInterface)
+     * string is the nameof(dependencyInterface)
      * Type is the concrete Type to be used when calling the "remote" component.
  * "Remote" components that are used by IStrategy implementations will receive the Proxies to their required remote services when those Strategies are initialized.
