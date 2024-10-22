@@ -48,4 +48,4 @@ This component composes the programmed Tasks and Steps into Business Activities 
 
 ### Interfaces
  * public ICustomerAccountManager
- * internal IStrategyHandler<IStrategy<T>> where T: SystemObject
+ * internal IStrategyHandler<IStrategy\<T\>> where T: SystemObject
