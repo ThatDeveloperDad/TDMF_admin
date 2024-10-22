@@ -22,13 +22,13 @@ This component composes the programmed Tasks and Steps into Business Activities 
  * Accepts the inbound data for a CustomerSubcription manipulation, and an ActivityContext identifier.
  * Validates that inbound data against the necessary Current states for the objects being manipulated.
  * Runs whichever Strategy is identified by the Activity Context.
-  * Known ActivityContexts:
-   * ProvisionSubscription
-   * RenewSubscription
-   * PauseSubscription
-   * ResumeSubscription
-   * DiscontinueSubscription
-   * CancelSubscription
+   * Known ActivityContexts:
+     * ProvisionSubscription
+     * RenewSubscription
+     * PauseSubscription
+     * ResumeSubscription
+     * DiscontinueSubscription
+     * CancelSubscription
 
 ## Nerd Stuff
 ### Namespaces
