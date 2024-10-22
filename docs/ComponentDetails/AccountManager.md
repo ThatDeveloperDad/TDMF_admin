@@ -51,13 +51,32 @@ This component composes the programmed Tasks and Steps into Business Activities 
 ### Interfaces
 #### public ICustomerAccountManager
 
+**Methods**
+ * public (CustomerProfile?, Exception?) CreateCustomerProfile(CustomerData profileData)
+   * Accepts a CustomerData object, and uses it to provision a new CustomerProfile.
+   * Returns either the newly provisioned CustomerProfile, or an Exception.
+ * public (CustomerProfile?, Exception?) StoreCustomerProfile(CustomerProfile profile)
+   * Overwrites the values of any mutable properties on the CustomerProfile object in the various Resources.
+   * Returns wither the post-updated Profile or an Exception.
+ * public (CustomerSubscription?, Exception?) ManageCustomerSubscription(ActionKind managementAction, SubscriptionData data)
+   * validates the inbound data to ensure that its correct for the identified managementAction.
+   * Forwards that data to the matching Strategy implementation.
+
+### public enum ActionKind
+ * Identifies the different Actions that can be performed against the incoming SubscriptionData
+ * Current ActionKinds include:
+   * Provision
+   * Renew
+   * Pause
+   * Resume
+   * Discontinue
+   * Cancel 
+
+### Implementations
+ 
 **Dependencies**
  * IValidator
  * ICustomerAccess
  * ISubscriptionAccess
  * IShopGateway
  * IProrater
-
-**Methods**
-
- 
