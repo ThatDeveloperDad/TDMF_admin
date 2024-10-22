@@ -58,11 +58,12 @@ This component composes the programmed Tasks and Steps into Business Activities 
  * public (CustomerProfile?, Exception?) StoreCustomerProfile(CustomerProfile profile)
    * Overwrites the values of any mutable properties on the CustomerProfile object in the various Resources.
    * Returns wither the post-updated Profile or an Exception.
- * public (CustomerSubscription?, Exception?) ManageCustomerSubscription(ActionKind managementAction, SubscriptionData data)
+ * public (CustomerSubscription?, Exception?) ManageCustomerSubscription(ActionKind managementAction, ActionData data)
    * validates the inbound data to ensure that its correct for the identified managementAction.
    * Forwards that data to the matching Strategy implementation.
+   * Returns either the Updated CustomerSobscription State, or an Exception.
 
-### public enum ActionKind
+#### public enum ActionKind
 *Note:  This concept is subject to change.  I'm not sure I like it.*
  * Identifies the different Actions that can be performed against the incoming SubscriptionData
  * Current ActionKinds include:
@@ -74,7 +75,11 @@ This component composes the programmed Tasks and Steps into Business Activities 
    * Cancel
 
 ### Implementations
- 
+
+#### public CustomerAccountManager
+**Implements** ICustomerAccountManager
+
+
 **Dependencies**
  * IValidator
  * ICustomerAccess
