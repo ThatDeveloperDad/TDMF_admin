@@ -30,10 +30,22 @@ This component composes the programmed Tasks and Steps into Business Activities 
       * Discontinue
       * Cancel
 
+---
 ## Nerd Stuff
+### Project Name
+**TssSaasAdmin.Managers.CustomerAccount**
+
+### Project Type:  
+**C# Class Library**  
+**.Net 8**
+
 ### Namespaces
- * TddSaasAdmin.Managers.CustomerAccount
- 
+ * TddSaasAdmin.Managers.CustomerAccount (root)
+   * We'll put the default AccountManager implementation here.
+ * TddSaasAdmin.Managers.CustomerAccount.Public (folder; ONLY public interfaces and class definitions)
+ * TddSaasAdmin.Managers.CustomerAccount.Strategies (folder; ONLY internal interfaces & implementations)
+ * 
 
 ### Interfaces
- * ICustomerAccountManager
+ * public ICustomerAccountManager
+ * internal IStrategyHandler<IStrategy<T>> where T: SystemObject
