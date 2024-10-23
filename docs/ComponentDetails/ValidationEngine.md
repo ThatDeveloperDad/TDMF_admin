@@ -42,12 +42,12 @@ Further, we can abstract the code that accesses that Object.Property.Value so th
 
 A RULE is a single comparison expression between two values.  (Some frameworks or taxonomies use the word Predicate for this concept.)  
 
-A rule takes the form of:  
+An expression takes the form of:  
 
 \[ActualValue\]  \[Operator\]  \[ExpectedValue\]  
 
 WHERE:  
-ActualValue is the Object.Property.Value that we're validating.
+ActualValue is the Object.Property.Value that we're testing.
 Operator is the kind of comparison we're using for the inspection.  
 ExpectedValue is the Fixed Value that our comparison needs to see to be true.  
 
@@ -55,11 +55,22 @@ Operators can include:  Equals, GreaterThat, LessThan, Contains (for some scenar
 
 In .Net languages, which are considered to be Strongly Typed, we must also ensure that the Operands (Actual and Expected values,) are of comparable types.  (We can't compare a string to an int, who knows what would happen there.)
 
-SO... a Rule has:  
-One Operator
-One ExpectedValue*
-An OperandType
+SO... an expression has:  
+ * One Operator
+ * One ExpectedValue*
+ * An OperandType
+ * The TestOperand is passed into the expression at runtime as a parameter.
 
-*Some rules can be built using a collection of values as the ExpectedValue.  Those Rules typically use the Set-Comparison Operators)
+*Some rules can be built using a collection of values as the ExpectedValue.  Those Rules typically use the Set-Comparison Operators)  This expected Value should almost never be hard coded into the Expression's definition.
 
+A RULE combines an expression with a single Property on a specific SystemObject Type.  A Rule should also (optionally) define the consequence for the expression returning False.  (In the case of a Validation Rule, perhaps a Validation Error would be added to the System Object's State somehow, maybe a collection of Validation Messages?)
+
+Therefore, a Rule has:  
+ * An Expression
+ * A Target Type (that inherits from SystemObject)
+ * The Property name to be used as the TestOperand on the Expression
+ * An Expected Value (which is injected into the Expression when it is initialized)
+ * (optionally,) some Action to take when the Expression evaluates to false.
+
+Internal to a Rule implementation, when the Rule executes against the Target Instance, the code will get the value for the TargetProperty from that TargetInstance, and run the Rule's Expression using the property value.  If a Consequence has been configured, it too is executed against the TargetInstance.
 
