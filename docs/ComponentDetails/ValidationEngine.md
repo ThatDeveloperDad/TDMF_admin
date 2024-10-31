@@ -18,19 +18,7 @@ There are a couple contexts in which Validation can be done.
 These types of checks are called Validations, which are based on and formed from Rules.  (These rules can be defined by Business Policy, or event technical requirements of the System itself.)
 
 ## Nerd Stuff
-A Validation Engine is a code artifact THAT HAS:  
- * an organized collection of Rules that can be applied to \<some entity\> (aka SystemObject) in whichever combination is required by \<some process \> (aka: SystemAction aka: Process / Activity / Step)  
- * This collection contains an indexer, which identifies the combination of SystemObject + SystemAction. For each indexed combination, there isa set of Rules that must be satisfied for that SystemAction to proceed.
 
-Each Rule HAS: 
- * (Property) The Type of SystemObject to which the Rule applies.
- * (Property) A string value that identifies the Property that the Rule applies to.
- * (Property) BooleanExpression that must evaluate to True.
- * (Property) Optionally, a Rule may also be configured with a Consequence Action that performs some manipulation against the SystemObject Instance when the Expression returns False.
- * (Method) A method that accepts an instance of the Type specified in the Type property and returns a Boolean.  IF the optional Consequence action has been configured, the Instance will be returned in an out parameter from this method.)
+***Note***  This component has been documented and implemented in a different repository.  
+[My Rules Utility and Validation Engine modules](https://github.com/ThatDeveloperDad/components-rules)
 
-An Expression HAS: 
- * a Type specifier that defined the Type used when comparing the inbound Value To Test against the ExpectedValue
- * an Operator
- * an ExpectedValueOperand.
- * a method that accepts a value of the appropriate Type, compares it to the ExpectedValueOperand using the specified Operator, and returns a boolean value representing the outcome of the Expression Evaluation.
