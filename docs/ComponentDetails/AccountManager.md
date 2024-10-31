@@ -87,3 +87,8 @@ This component composes the programmed Tasks and Steps into Business Activities 
  * IShopGateway
  * IProrater
  * ILoggerFactory
+ 
+ 
+#### internal CustomerBuilder.cs
+Responsible for using the Manager's ResourceAccess component instances to retrieve and build a fully formed Customer object.
+Retrieves the "pieces" of a Customer from the different Resouces, and uses them to build the idiomatic representation of the Customer Object as Required by the AccountManager.
