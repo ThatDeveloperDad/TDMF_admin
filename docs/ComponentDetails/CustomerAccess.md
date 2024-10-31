@@ -10,6 +10,15 @@ This Component, like other ResourceAccess components, will be assembled from 2 o
 The main assembly that will be referenced by the Manager will be:
 [ProjectRootNameSpace].CustomerAccess.Abstractions
 
-I'll need to include some wat to access Customer information from the following stores:
-Microsoft Entra ID
-Azure Table Storage (replacement for SQL in this application.)
+ICustomerAccess
+Customer
+  .Profile
+  .Subscription
+  .SubscriptionHistory
+
+I'll need to include some way to access Customer information from the following stores:  
+ * Microsoft Entra ID  
+ * Azure Table Storage (replacement for SQL in this application.)  
+
+The Schema of the Customer Objects to be stored is TBD, and will initially be loosely based on the Customer object defined by the LemonSqueezy API.
+
