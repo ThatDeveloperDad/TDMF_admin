@@ -38,9 +38,10 @@ This will contain a collection of the Ids that are associated with this Customer
 
 #### CustomerProfile  
 Holds the information that we need to either share with 3rd party service providers or gets displayed in the Application.
-Keep PII to the absolute minimum here.
+Keep PII to the absolute minimum here.  
+**Properties**  
  * .DisplayPame
- * *other properties that make sense to store here for efficiency's sake.*
+ * *other properties that make sense to store here for efficiency's sake.*  
 (We might not want to query Entra every time we make a call to the E-Com api.  Querying Entra WILL be my first strategy though, because if it works and isn't too slow, Imma keep it.)
 
 #### CustomerSubscription  
