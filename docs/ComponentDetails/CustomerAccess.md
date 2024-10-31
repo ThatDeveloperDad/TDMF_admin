@@ -50,12 +50,3 @@ Contains the Subscription information for a given Customer.
 #### SubscriptionHistory
 Contains a list of SubscriptionActions that have been taken over the course of the current Subscription's lifetime.  
 i.e:  Renewal, Pause/Resume, Cancellation, etc...
-
-I'll need to include some way to access Customer information from the following stores:  
- * Microsoft Entra ID  
- * Azure Table Storage (replacement for SQL in this application.)  
-
-The Schema of the Customer Objects to be stored is TBD, and will initially be loosely based on the Customer object defined by the LemonSqueezy API.  
-
-All implementations of ICustomerAccess will have a dependency on the MS-Entra wrapper component, and implement the Storage Tasks against a specific Storage Tech.  (i.e.:  Sql Server, Files, Table Storage, etc....)  
-This application will only implement against Azure Table Storage.
