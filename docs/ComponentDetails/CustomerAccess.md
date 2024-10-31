@@ -15,7 +15,7 @@ The main assembly that will be referenced by the Manager will be:
 
 ### Classes
 
-####Customer
+#### Customer
 **Properties:**  
   .Id  (We're going to use the EntraId as the "primary" identifier for each Customer within the system.)  
   .Ids  
@@ -24,13 +24,18 @@ The main assembly that will be referenced by the Manager will be:
     .SubscriptionHistory  
 
 #### CustomerIds
-This will contain a collection of the Ids that are associated with this Customer object in the various 3rd party Systems we'll integrate with.  (Currently only Entra and LemonSqueezy)  Each ID will have a VendorName and the Id Value.
-#### CustomerProfile  
+This will contain a collection of the Ids that are associated with this Customer object in the various 3rd party Systems we'll integrate with.  (Currently only Entra and LemonSqueezy)  Each ID will have a VendorName and the Id Value.  
 
-#### Subscription  
+#### CustomerProfile  
+Holds the information that we need to either share with 3rd party service providers or gets displayed in the Application.
+Keep PII to the absolute minimum here.
+
+#### CustomerSubscription  
+Contains the Subscription information for a given Customer.
 
 #### SubscriptionHistory
-  
+Contains a list of SubscriptionActions that have been taken over the course of the current Subscription's lifetime.  
+i.e:  Renewal, Pause/Resume, Cancellation, etc...
 
 I'll need to include some way to access Customer information from the following stores:  
  * Microsoft Entra ID  
