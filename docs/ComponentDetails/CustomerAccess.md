@@ -10,11 +10,27 @@ This Component, like other ResourceAccess components, will be assembled from 2 o
 The main assembly that will be referenced by the Manager will be:
 [ProjectRootNameSpace].CustomerAccess.Abstractions
 
-ICustomerAccess
-Customer
-  .Profile
-  .Subscription
-  .SubscriptionHistory
+### Interfaces
+####ICustomerAccess
+
+### Classes
+
+####Customer
+**Properties:**  
+  .Id  (We're going to use the EntraId as the "primary" identifier for each Customer within the system.)  
+  .Ids  
+  .Profile  
+  .Subscription  
+    .SubscriptionHistory  
+
+#### CustomerIds
+This will contain a collection of the Ids that are associated with this Customer object in the various 3rd party Systems we'll integrate with.  (Currently only Entra and LemonSqueezy)  Each ID will have a VendorName and the Id Value.
+#### CustomerProfile  
+
+#### Subscription  
+
+#### SubscriptionHistory
+  
 
 I'll need to include some way to access Customer information from the following stores:  
  * Microsoft Entra ID  
