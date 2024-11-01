@@ -33,7 +33,7 @@ This component composes the programmed Tasks and Steps into Business Activities 
 ---
 ## Nerd Stuff
 ### Project Name
-**TssSaasAdmin.Managers.CustomerAccount**
+**TDevDad.SaasAdmin.AccountManager**
 
 ### Project Type:  
 **C# Class Library**  
