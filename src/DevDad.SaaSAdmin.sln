@@ -1,0 +1,75 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{13F569B6-440C-4511-BC17-83BB58AE8F62}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Managers", "Managers", "{D976003A-96CC-418E-9653-FCDC659DA31D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Engines", "Engines", "{39A18926-F747-46B0-BA7F-DDCBD54CFBC4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ResourceAccess", "ResourceAccess", "{628C174E-70E3-4F44-A319-0D523536FCD1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{85D215D9-5287-4E0F-B550-D0CAF2AABB1F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "iFX", "iFX", "{FFFF0C1E-D586-4F84-874F-9635F9E4E3ED}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevDad.SaaSAdmin.AccountManager", "Managers\DevDad.SaaSAdmin.AccountManager\DevDad.SaaSAdmin.AccountManager.csproj", "{EFEE51B9-00D8-4636-A21C-46566BD18CC6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevDad.SaaSAdmin.iFX", "iFX\DevDad.SaaSAdmin.iFX\DevDad.SaaSAdmin.iFX.csproj", "{0B57A4D0-EA8C-45EC-94C2-F464ADB5AE1D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestConsole", "Tests\TestConsole\TestConsole.csproj", "{1E3859C2-1430-402C-9198-421527FBCA53}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevDad.SaaSAdmin.RulesAccess.AzureTableProvider", "ResourceAccess\DevDad.SaaSAdmin.RulesAccess.AzureTableProvider\DevDad.SaaSAdmin.RulesAccess.AzureTableProvider.csproj", "{54E1938A-DF31-4AC5-BAEC-580711AA2E86}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThatDeveloperDad.iFX", "iFX\ThatDeveloperDad.iFX\ThatDeveloperDad.iFX.csproj", "{AC9146E1-AE9B-427F-A922-BAE8B0F37790}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevDad.SaaSAdmin.RulesAccess.Abstractions", "ResourceAccess\DevDad.SaaSAdmin.RulesAccess.Abstractions\DevDad.SaaSAdmin.RulesAccess.Abstractions.csproj", "{AE39E763-F656-4880-BA6C-1F675C20502D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EFEE51B9-00D8-4636-A21C-46566BD18CC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFEE51B9-00D8-4636-A21C-46566BD18CC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFEE51B9-00D8-4636-A21C-46566BD18CC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFEE51B9-00D8-4636-A21C-46566BD18CC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B57A4D0-EA8C-45EC-94C2-F464ADB5AE1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B57A4D0-EA8C-45EC-94C2-F464ADB5AE1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B57A4D0-EA8C-45EC-94C2-F464ADB5AE1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B57A4D0-EA8C-45EC-94C2-F464ADB5AE1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E3859C2-1430-402C-9198-421527FBCA53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E3859C2-1430-402C-9198-421527FBCA53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E3859C2-1430-402C-9198-421527FBCA53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E3859C2-1430-402C-9198-421527FBCA53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54E1938A-DF31-4AC5-BAEC-580711AA2E86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54E1938A-DF31-4AC5-BAEC-580711AA2E86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54E1938A-DF31-4AC5-BAEC-580711AA2E86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54E1938A-DF31-4AC5-BAEC-580711AA2E86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC9146E1-AE9B-427F-A922-BAE8B0F37790}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC9146E1-AE9B-427F-A922-BAE8B0F37790}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC9146E1-AE9B-427F-A922-BAE8B0F37790}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC9146E1-AE9B-427F-A922-BAE8B0F37790}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE39E763-F656-4880-BA6C-1F675C20502D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE39E763-F656-4880-BA6C-1F675C20502D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE39E763-F656-4880-BA6C-1F675C20502D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE39E763-F656-4880-BA6C-1F675C20502D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EFEE51B9-00D8-4636-A21C-46566BD18CC6} = {D976003A-96CC-418E-9653-FCDC659DA31D}
+		{0B57A4D0-EA8C-45EC-94C2-F464ADB5AE1D} = {FFFF0C1E-D586-4F84-874F-9635F9E4E3ED}
+		{1E3859C2-1430-402C-9198-421527FBCA53} = {85D215D9-5287-4E0F-B550-D0CAF2AABB1F}
+		{54E1938A-DF31-4AC5-BAEC-580711AA2E86} = {628C174E-70E3-4F44-A319-0D523536FCD1}
+		{AC9146E1-AE9B-427F-A922-BAE8B0F37790} = {FFFF0C1E-D586-4F84-874F-9635F9E4E3ED}
+		{AE39E763-F656-4880-BA6C-1F675C20502D} = {628C174E-70E3-4F44-A319-0D523536FCD1}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CC865211-B723-4745-954A-5D1CE6F65F40}
+	EndGlobalSection
+EndGlobal
