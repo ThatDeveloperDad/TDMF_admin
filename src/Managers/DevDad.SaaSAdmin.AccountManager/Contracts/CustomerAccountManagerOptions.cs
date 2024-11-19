@@ -12,23 +12,7 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 	{
 		public const string ConfigSectionName = "CustomerAccountManager";
 
-		public static CustomerAccountManagerOptions FromConfiguration(IConfigurationSection config)
-		{
-			//var mysection = config.GetSection(ConfigSectionName);
-
-			//if(mysection == null)
-			//{
-			//	throw new Exception($"Missing configuration section {ConfigSectionName}");
-			//}
-
-			CustomerAccountManagerOptions options = new();
-			config.Bind(options);
-
-			return options;
-
-		}
-
-        private CustomerAccountManagerOptions()
+        public CustomerAccountManagerOptions()
         {
             
         }

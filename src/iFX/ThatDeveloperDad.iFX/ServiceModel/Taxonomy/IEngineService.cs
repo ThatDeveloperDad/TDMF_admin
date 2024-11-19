@@ -22,7 +22,7 @@ namespace ThatDeveloperDad.iFX.ServiceModel.Taxonomy
 	/// Engine Services MAY NOT call into other Engine Services.
 	/// Engines MAY NOT call Manager Services.
 	/// </summary>
-	public interface IEngineService : IService
+	public interface IEngineService : ISystemComponent
 	{
 	}
 }

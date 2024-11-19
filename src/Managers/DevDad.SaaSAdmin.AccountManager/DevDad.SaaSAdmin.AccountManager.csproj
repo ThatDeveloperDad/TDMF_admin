@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../ResourceAccess/DevDad.SaaSAdmin.UserIdentity.Abstractions/DevDad.SaaSAdmin.UserIdentity.Abstractions.csproj" />
     <ProjectReference Include="..\..\iFX\ThatDeveloperDad.iFX\ThatDeveloperDad.iFX.csproj" />
     <ProjectReference Include="..\..\ResourceAccess\DevDad.SaaSAdmin.RulesAccess.Abstractions\DevDad.SaaSAdmin.RulesAccess.Abstractions.csproj" />
   </ItemGroup>

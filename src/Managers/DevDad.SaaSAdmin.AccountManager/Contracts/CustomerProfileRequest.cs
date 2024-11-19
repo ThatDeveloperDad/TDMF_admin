@@ -8,5 +8,7 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 {
 	public class CustomerProfileRequest
 	{
+
+		public string UserId {get;set;} = string.Empty;
 	}
 }

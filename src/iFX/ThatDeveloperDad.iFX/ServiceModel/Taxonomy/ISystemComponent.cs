@@ -12,8 +12,22 @@ namespace ThatDeveloperDad.iFX.ServiceModel.Taxonomy
 	/// Identifies a component with this marker interface as a Formal 
 	/// System Service within the SystemModel Taxonomy.
 	/// </summary>
-	public interface IService
+	public interface ISystemComponent
 	{
 		void SetConfiguration(IServiceOptions options);
+
+		IEnumerable<Type> ServiceArchetypes
+		{
+			get{
+				var archetypes = new List<Type>(){
+					typeof(IManagerService),
+					typeof(IUtilityService),
+					typeof(IEngineService),
+					typeof(IResourceAccessService),
+					typeof(IClientService)
+				};
+				return archetypes;
+			}
+		}
 	}
 }

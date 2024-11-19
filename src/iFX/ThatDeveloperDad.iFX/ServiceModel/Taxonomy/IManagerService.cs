@@ -20,5 +20,8 @@ namespace ThatDeveloperDad.iFX.ServiceModel.Taxonomy
 	/// Managers may call Engines and ResourceAccessors.
 	/// Managers may not directly call other Manager Services.
 	/// </summary>
-	public interface IManagerService : IService { }
+	public interface IManagerService : ISystemComponent 
+	{ 
+		
+	}
 }

@@ -15,7 +15,7 @@ namespace ThatDeveloperDad.iFX.ServiceModel.Taxonomy
 	/// Client Services are the ultimate Top of a System Architecture, and may only
 	/// call into Manager Services.
 	/// </summary>
-	public interface IClientService : IService
+	public interface IClientService : ISystemComponent
 	{
 	}
 }

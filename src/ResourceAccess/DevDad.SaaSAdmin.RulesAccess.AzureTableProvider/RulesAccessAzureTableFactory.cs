@@ -1,29 +1,40 @@
 ﻿using DevDad.SaaSAdmin.RulesAccess.Abstractions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using ThatDeveloperDad.iFX;
 using ThatDeveloperDad.iFX.ServiceModel;
+using ThatDeveloperDad.iFX.Utilities;
 
 namespace DevDad.SaaSAdmin.RulesAccess.AzureTableProvider
 {
-	public class RulesAccessAzureTableFactory : IServiceFactory<IRulesAccess>
+	public class RulesAccessAzureTableFactory 
+	: ServiceFactoryBase<IRulesAccess, TableProviderOptions>
+	, IServiceFactory<IRulesAccess>
 	{
-		public IRulesAccess CreateService(IConfiguration config)
+		public override IRulesAccess CreateService(
+			IConfiguration config,
+			IServiceProvider? standardDependencies = null)
 		{
-			IRulesAccess service = ConfigureService(config);
-			var proxy = new RulesTableInProcProxy(service);
+			AzureTableProvider service = 
+				CreateServiceInstance<AzureTableProvider>(config, false, standardDependencies);
 
+			var proxy = new RulesTableProxyBuilder()
+				.AddBehavior(LoggingBehavior<AzureTableProvider>.Create(standardDependencies))
+				.CreateProxy(service);
+
+			if(standardDependencies != null)
+			{
+				service = AddStandardDependencies(service, standardDependencies);
+			}
+			
 			return proxy;
 		}
 
-		private IRulesAccess ConfigureService(IConfiguration config)
-		{
+        protected override IEnumerable<Type> GetComponentDependencyList()
+        {
+            return Array.Empty<Type>();
+        }
 
-			TableProviderOptions options = new();
-			config.Bind(options);
-
-			var service = new AzureTableProvider();
-			service.SetConfiguration(options);
-
-			return service;
-		}
+        
 	}
 }

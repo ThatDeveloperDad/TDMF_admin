@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../iFX/ThatDeveloperDad.iFX/ThatDeveloperDad.iFX.csproj" />
+    <ProjectReference Include="../DevDad.SaaSAdmin.UserIdentity.Abstractions/DevDad.SaaSAdmin.UserIdentity.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Graph" Version="5.62.0" />
+  </ItemGroup>
+
+</Project>

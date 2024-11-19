@@ -32,7 +32,7 @@ namespace ThatDeveloperDad.iFX.ServiceModel.Taxonomy
 	/// ResourceAccessors may be called by either Managers or Engines.
 	/// ResourceAccessors may not call "across" to other ResourceAccessors.
 	/// </summary>
-	public interface IResourceAccessService : IService
+	public interface IResourceAccessService : ISystemComponent
 	{
 	}
 }

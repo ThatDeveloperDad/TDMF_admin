@@ -1,54 +1,31 @@
 ﻿using DevDad.SaaSAdmin.AccountManager.Contracts;
 using DevDad.SaaSAdmin.RulesAccess.Abstractions;
+using DevDad.SaaSAdmin.UserIdentity.Abstractions;
 using ThatDeveloperDad.iFX.ServiceModel;
 using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
 
 namespace DevDad.SaaSAdmin.AccountManager
 {
-	internal class CustomerAccountManager : IAccountManager
+	internal sealed class CustomerAccountManager 
+	: ManagerBase, IAccountManager
 	{
-		private CustomerAccountManagerOptions? _options;
-		private Dictionary<Type, IService> _dependencies = new();
-
-		private IRulesAccess _rulesAccess => Proxy<IRulesAccess>();
-
-		internal static IEnumerable<Type> GetRequiredDependencies()
-		{
-			Type[] requiredDependencies 
-				= new Type[] 
-					{ 
-						typeof(IRulesAccess) 
-					};
-
-			return requiredDependencies;
-		}
-
-		internal void SetDependency<T>(T serviceDependency) where T: IService
-		{
-			Type dependencyType = typeof(T);
-			_dependencies[dependencyType] = serviceDependency;
-		}
-
-		internal T Proxy<T>() where T: IService
-		{
-			T service = (T)_dependencies[typeof(T)];
-			return service;
-		} 
+		private IRulesAccess _rulesAccess => GetProxy<IRulesAccess>();
+		private IUserIdentityAccess _userIdentityAccess => GetProxy<IUserIdentityAccess>();
 
 		private string GetConfigFrag()
 		{
 			string configFragment = string.Empty;
-			if (_options != null)
-			{
-				configFragment = $" with config {_options.SomeContrivedNonsense}";
-			}
+			configFragment = Options<CustomerAccountManagerOptions>()?
+				.SomeContrivedNonsense
+				?? throw new Exception($"The {this.GetType().Name} component has not been properly configured.");
+
 			return configFragment;
 		}
 
 		public (CustomerProfile?, Exception?) LoadOrCreateCustomerProfile(CustomerProfileRequest requestData)
 		{
-			
 			_rulesAccess.LoadRules();
+			var cust = _userIdentityAccess.LoadUserIdentityAsync(requestData.UserId).Result;
 
 			Console.WriteLine($"LoadOrCreateCustomerProfile{GetConfigFrag()}");
 			return (null, null);
@@ -66,9 +43,6 @@ namespace DevDad.SaaSAdmin.AccountManager
 			return (null, null);
 		}
 
-		public void SetConfiguration(IServiceOptions options)
-		{
-			_options = (CustomerAccountManagerOptions)options;
-		}
-	}
+        
+    }
 }
