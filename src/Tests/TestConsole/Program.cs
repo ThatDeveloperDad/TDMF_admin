@@ -5,13 +5,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TestConsole.ProgramBehaviors;
 
 namespace TestConsole
 {
 	internal class Program
 	{
-		static void Main(string[] args)
+		static  void Main(string[] args)
 		{
 			IConfiguration systemConfig = LoadSystemConfiguration();
 			IServiceProvider? services = ConfigureStandardDependencies();
@@ -19,7 +18,9 @@ namespace TestConsole
 
 			var accountManager = GetAccountManager(systemConfig, services);
 
-			accountManager.LoadOrCreateCustomerProfile(new CustomerProfileRequest());
+			CustomerProfileRequest request = new("TestingAccountManager", "a0b66013-a5ef-462f-a812-3eb4aeacff66");
+
+			var loadResult = accountManager.LoadOrCreateCustomerProfileAsync(request).Result;
 			accountManager.ManageCustomerSubscription(new SubscriptionActionRequest());
 			accountManager.StoreCustomerProfile(new CustomerProfile());
 

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ThatDeveloperDad.iFX.ServiceModel;
 
-namespace DevDad.SaaSAdmin.AccountManager.Contracts
+namespace DevDad.SaaSAdmin.AccountManager
 {
 	public class CustomerAccountManagerOptions : IServiceOptions
 	{

@@ -8,5 +8,10 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 {
 	public class CustomerProfile
 	{
+		public string UserId { get; set; } = string.Empty;
+		public string DisplayName { get; set; } = string.Empty;
+		public string SubscriptionStatus { get; set; } = string.Empty;
+
+		
 	}
 }

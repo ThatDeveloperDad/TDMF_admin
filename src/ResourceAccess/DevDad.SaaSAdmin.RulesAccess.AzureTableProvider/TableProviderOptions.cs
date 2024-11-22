@@ -4,8 +4,6 @@ namespace DevDad.SaaSAdmin.RulesAccess.AzureTableProvider
 {
 	public class TableProviderOptions : IServiceOptions
 	{
-		public const string ConfigSectionName = "CustomerAccountManager";
-
 		public string ConnectionString { get; set; } = string.Empty;
     }
 }

@@ -5,6 +5,7 @@ using ThatDeveloperDad.iFX;
 using DevDad.SaaSAdmin.RulesAccess.Abstractions;
 using DevDad.SaaSAdmin.UserIdentity.Abstractions;
 using ThatDeveloperDad.iFX.Utilities;
+using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 
 namespace DevDad.SaaSAdmin.AccountManager
 {
@@ -38,7 +39,8 @@ namespace DevDad.SaaSAdmin.AccountManager
             var deps = new List<Type>
 			{
 				typeof(IRulesAccess),
-				typeof(IUserIdentityAccess)
+				typeof(IUserIdentityAccess),
+				typeof(IUserAccountAccess)
 			};
 			return deps;
         }

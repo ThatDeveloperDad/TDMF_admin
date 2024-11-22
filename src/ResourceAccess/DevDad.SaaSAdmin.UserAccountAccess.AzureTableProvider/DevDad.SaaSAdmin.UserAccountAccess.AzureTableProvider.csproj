@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../iFX/ThatDeveloperDad.iFX/ThatDeveloperDad.iFX.csproj" />
+    <ProjectReference Include="../DevDad.SaaSAdmin.UserAccountAccess.Abstractions/DevDad.SaaSAdmin.UserAccountAccess.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Data.Tables" Version="12.9.1" />
+  </ItemGroup>
+
+</Project>

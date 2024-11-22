@@ -149,11 +149,35 @@ public abstract class ServiceBase : ISystemComponent
 
     protected async Task LogInformationAsync(string message)
     {
-        if(_logger == null)
+        try
         {
-            return;
-        }
+            if(_logger == null)
+            {
+                return;
+            }
 
-        await Task.Run(() => _logger?.LogInformation(message));
+            await Task.Run(() => _logger?.LogInformation(message));
+        }
+        catch
+        {
+            // eat the error.
+        }
+    }
+
+    protected async Task LogExceptionAsync(Exception e)
+    {
+        try
+        {
+            if(_logger == null)
+            {
+                return;
+            }
+
+            await Task.Run(() => _logger?.LogError(e, e.Message));
+        }
+        catch
+        {
+            // eat the error.
+        }
     }
 }

@@ -9,6 +9,6 @@ public interface IUserIdentityAccess : IResourceAccessService
     /// </summary>
     string IdentityVendor {get;}
 
-    Task<UserIdentity?> LoadUserIdentityAsync(string userId);
+    Task<LoadIdentityResponse> LoadUserIdentityAsync(LoadIdentityRequest request);
 
 }

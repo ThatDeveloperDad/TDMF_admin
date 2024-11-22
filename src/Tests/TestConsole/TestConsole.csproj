@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../ResourceAccess/DevDad.SaaSAdmin.UserAccountAccess.AzureTableProvider/DevDad.SaaSAdmin.UserAccountAccess.AzureTableProvider.csproj" />
     <ProjectReference Include="../../ResourceAccess/DevDad.SaaSAdmin.UserIdentity.EntraB2C/DevDad.SaaSAdmin.UserIdentity.EntraB2C.csproj" />
     <ProjectReference Include="..\..\iFX\ThatDeveloperDad.iFX\ThatDeveloperDad.iFX.csproj" />
     <ProjectReference Include="..\..\Managers\DevDad.SaaSAdmin.AccountManager\DevDad.SaaSAdmin.AccountManager.csproj" />

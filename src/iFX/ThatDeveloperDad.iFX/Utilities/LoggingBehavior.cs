@@ -13,7 +13,7 @@ public class LoggingBehavior<T>
     : IOperationBehavior
     where T: ISystemComponent
 {
-    private ILogger _logger;
+    private ILogger? _logger;
     private LoggingBehavior(ILogger? logger )
     {
         _logger = logger;

@@ -2,15 +2,15 @@ using System;
 
 namespace DevDad.SaaSAdmin.UserIdentity.Abstractions;
 
-public record UserIdentity
+public record UserIdentityResource
 {
-    public UserIdentity()
+    public UserIdentityResource()
     {
         UserId = string.Empty;
         DisplayName = string.Empty;
     }
 
-    public UserIdentity(string userId, string displayName)
+    public UserIdentityResource(string userId, string displayName)
     {
         UserId = userId;
         DisplayName = displayName;

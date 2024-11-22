@@ -4,7 +4,7 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 {
 	public interface IAccountManager : IManagerService
     {
-        (CustomerProfile?, Exception?) LoadOrCreateCustomerProfile(CustomerProfileRequest requestData);
+        Task<CustomerProfileResponse> LoadOrCreateCustomerProfileAsync(CustomerProfileRequest requestData);
 
         (CustomerProfile?, Exception?) StoreCustomerProfile(CustomerProfile profile);
 

@@ -63,7 +63,7 @@ public class DynamicServiceProxy<T, TService>
 
         MethodContext context = new()
         {
-            MethodName = targetMethod?.Name,
+            MethodName = targetMethod!.Name,
             Parameters = args
         };
 
