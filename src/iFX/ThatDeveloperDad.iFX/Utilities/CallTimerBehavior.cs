@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThatDeveloperDad.iFX.Behaviors;
 using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
+using ThatDeveloperDad.iFX.TypeConversionExtensions;
 
 namespace ThatDeveloperDad.iFX.Utilities;
 /// <summary>
@@ -53,7 +54,7 @@ public class CallTimerBehavior
         
         var methodDuration = DateTime.Now.Ticks - _methodStartedAt;
         TimeSpan execTime = new TimeSpan(methodDuration??0);
-        _logger.LogInformation($"Exiting {context.MethodName} with parameters {context.Parameters} in {execTime.Milliseconds} ms");
+        _logger.LogInformation($"Exiting {context.MethodName} with parameters {context.Parameters} in {execTime.ToHumanReadable()}");
         return Task.CompletedTask;
     }
 }

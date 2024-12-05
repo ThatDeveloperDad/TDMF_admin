@@ -15,10 +15,6 @@ namespace DevDad.SaaSAdmin.AccountManager
         public CustomerAccountManagerOptions()
         {
             
-        }
-
-        public string SomeContrivedNonsense { get; set; } = "Booga booga!";
-
-		
+        }		
 	}
 }

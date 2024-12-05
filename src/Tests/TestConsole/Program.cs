@@ -1,10 +1,9 @@
-using DevDad.SaaSAdmin.AccountManager;
 using DevDad.SaaSAdmin.AccountManager.Contracts;
 using DotNetEnv;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ThatDeveloperDad.iFX;
 
 namespace TestConsole
 {
@@ -14,7 +13,26 @@ namespace TestConsole
 		{
 			var bootLogger = CreateBootLogger();
 			IConfiguration systemConfig = LoadSystemConfiguration(bootLogger);
-			IServiceProvider? services = BuildUtilityProvider(systemConfig, bootLogger);
+			IServiceProvider globalUtilities = BuildUtilityProvider(systemConfig, bootLogger);
+
+			IServiceCollection appServicesBuilder = new ServiceCollection();
+			appServicesBuilder = appServicesBuilder.AddAppArchitecture(
+				systemConfig,
+				globalUtilities,
+				bootLogger);
+
+			IServiceProvider appServices = appServicesBuilder
+				.BuildServiceProvider();
+
+			IAccountManager? mgr = appServices.GetService<IAccountManager>();
+
+			if(mgr == null)
+			{
+				bootLogger.LogError("Account Manager could not be retrieved from appServices.");
+				return;
+			}
+
+			mgr.StoreCustomerProfile(new CustomerProfile());
 
 			Console.WriteLine("Hello World!");
 			
@@ -36,7 +54,7 @@ namespace TestConsole
 			return logger;
 		}
 
-		static IServiceProvider? BuildUtilityProvider(IConfiguration systemConfig,
+		static IServiceProvider BuildUtilityProvider(IConfiguration systemConfig,
 			ILogger bootLog)
 		{
 			bootLog.LogInformation("Configuring Utility Provider");

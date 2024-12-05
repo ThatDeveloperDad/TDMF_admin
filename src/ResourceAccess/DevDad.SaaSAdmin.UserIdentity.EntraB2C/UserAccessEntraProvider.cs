@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DevDad.SaaSAdmin.UserIdentity.EntraB2C;
 
-internal class UserAccessEntraProvider 
+public class UserAccessEntraProvider 
     : IUserIdentityAccess, IDisposable
 {
     public string IdentityVendor => "MS-Entra";
@@ -30,16 +30,16 @@ internal class UserAccessEntraProvider
         {
         if(_clientInstance == null)
         {
-            MsGraphOptions? options = (MsGraphOptions?)_options;
+           
 
-            if(options == null)
+            if(_options == null)
             {
                 throw new InvalidOperationException("Cannot connect to MS Graph.  Required configuration is missing.");
             }
             _secret = new ClientSecretCredential(
-                tenantId: options.TenantId,
-                clientId: options.ClientId,
-                clientSecret: options.ClientSecret
+                tenantId: _options.TenantId,
+                clientId: _options.ClientId,
+                clientSecret: _options.ClientSecret
             );
             
             _clientInstance = new GraphServiceClient(_secret, ["https://graph.microsoft.com/.default"]);

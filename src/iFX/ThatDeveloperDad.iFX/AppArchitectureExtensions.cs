@@ -88,7 +88,10 @@ public static class AppArchitectureExtensions
         
         Type contract = TypeHelper.LoadType(module.Contract, module.ContractAssembly);
         string contractArchetype = 
-            TypeHelper.GetArchetype(contract)?.Name??"NonSystemComponent"
+            TypeHelper.GetArchetype(contract)?.Name??"NonSystemComponent";
+        // This is a value used in Log and Error Messages.  Let's clean up
+        // the name and remove all the Code Goop.
+        contractArchetype = contractArchetype
             .Replace("I", string.Empty)
             .Replace("Service", string.Empty);
 

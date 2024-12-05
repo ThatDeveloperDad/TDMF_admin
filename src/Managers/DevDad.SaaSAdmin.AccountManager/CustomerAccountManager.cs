@@ -11,11 +11,11 @@ using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
 
 namespace DevDad.SaaSAdmin.AccountManager
 {
-	internal sealed class CustomerAccountManager 
+	public sealed class CustomerAccountManager 
 	: IAccountManager
 	{
 		private readonly IRulesAccess? _rulesAccess;
-		private readonly IUserIdentityAccess? _userIdentityAccess;
+		private readonly IUserIdentityAccess _userIdentityAccess;
 		private readonly IUserAccountAccess? _userAccountAccess;
 		
 		private readonly ILogger? _logger;
@@ -34,9 +34,13 @@ namespace DevDad.SaaSAdmin.AccountManager
 			return _builderInstance;
 		}
 		
-		public CustomerAccountManager()
+		public CustomerAccountManager(ILoggerFactory? loggerFactory,
+			IUserIdentityAccess userIdentityAccess,
+			IUserAccountAccess userAccountAccess)
 		{
-			
+			_logger = loggerFactory?.CreateLogger<CustomerAccountManager>();
+			_userIdentityAccess = userIdentityAccess;
+			_userAccountAccess = userAccountAccess;
 		}
 
 		public async Task<CustomerProfileResponse> LoadOrCreateCustomerProfileAsync(CustomerProfileRequest requestData)
@@ -73,13 +77,13 @@ namespace DevDad.SaaSAdmin.AccountManager
 
 		public (CustomerSubscription?, Exception?) ManageCustomerSubscription(SubscriptionActionRequest actionRequest)
 		{
-			Console.WriteLine($"ManageCustomerSubscription Executed.");
+			_logger?.LogInformation($"ManageCustomerSubscription Executed.");
 			return (null, null);
 		}
 
 		public (CustomerProfile?, Exception?) StoreCustomerProfile(CustomerProfile profile)
 		{
-			Console.WriteLine($"StoreCustomerProfile executed.");
+			_logger?.LogInformation($"StoreCustomerProfile executed.");
 			return (null, null);
 		}
 

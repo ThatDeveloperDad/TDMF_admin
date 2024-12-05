@@ -1,14 +1,20 @@
 ﻿using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
+using Microsoft.Extensions.Logging;
 using ThatDeveloperDad.iFX.ServiceModel;
 
 namespace DevDad.SaaSAdmin.UserAccountAccess.AzureTableProvider;
 
-internal class UserAccountAzureTableProvider
+public class UserAccountAzureTableProvider
     : IUserAccountAccess
 {
-    public UserAccountAzureTableProvider()
+    private readonly ILogger? _logger;
+    private readonly UserAccessAzureTableOptions _options;
+
+    public UserAccountAzureTableProvider(UserAccessAzureTableOptions options,
+        ILoggerFactory? loggerFactory)
     {
-        
+        _options = options;
+        _logger = loggerFactory?.CreateLogger<UserAccountAzureTableProvider>();
     }
 
     public async Task<UserAccountResource?> LoadUserAccountAsync(string accountId)
