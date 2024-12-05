@@ -4,11 +4,12 @@ using ThatDeveloperDad.iFX.ServiceModel;
 namespace DevDad.SaaSAdmin.UserAccountAccess.AzureTableProvider;
 
 internal class UserAccountAzureTableProvider
-    : ServiceBase
-    , IUserAccountAccess
+    : IUserAccountAccess
 {
-
-    
+    public UserAccountAzureTableProvider()
+    {
+        
+    }
 
     public async Task<UserAccountResource?> LoadUserAccountAsync(string accountId)
     {

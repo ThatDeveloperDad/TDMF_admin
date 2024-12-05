@@ -12,50 +12,86 @@ namespace TestConsole
 	{
 		static  void Main(string[] args)
 		{
-			IConfiguration systemConfig = LoadSystemConfiguration();
-			IServiceProvider? services = ConfigureStandardDependencies();
+			var bootLogger = CreateBootLogger();
+			IConfiguration systemConfig = LoadSystemConfiguration(bootLogger);
+			IServiceProvider? services = BuildUtilityProvider(systemConfig, bootLogger);
 
-
-			var accountManager = GetAccountManager(systemConfig, services);
-
-			CustomerProfileRequest request = new("TestingAccountManager", "a0b66013-a5ef-462f-a812-3eb4aeacff66");
-
-			var loadResult = accountManager.LoadOrCreateCustomerProfileAsync(request).Result;
-			accountManager.ManageCustomerSubscription(new SubscriptionActionRequest());
-			accountManager.StoreCustomerProfile(new CustomerProfile());
-
+			Console.WriteLine("Hello World!");
+			
+			bootLogger.LogInformation("Nothing more to do.  Imma take a nap right here.");
 		}
 
-		static IServiceProvider? ConfigureStandardDependencies()
+		static ILogger CreateBootLogger()
 		{
-			ServiceCollection serviceBuilder = new();
-			serviceBuilder.AddLogging(
-				configure=> 
+			ILoggerFactory loggerFactory = LoggerFactory.Create(
+				builder =>
 				{
-					configure.AddConsole();
+					builder.AddConsole();
 				}
 			);
+
+			ILogger logger = loggerFactory.CreateLogger(nameof(Program));
+
+			logger.LogInformation("App BootLogger Created.");
+			return logger;
+		}
+
+		static IServiceProvider? BuildUtilityProvider(IConfiguration systemConfig,
+			ILogger bootLog)
+		{
+			bootLog.LogInformation("Configuring Utility Provider");
+			IServiceCollection serviceBuilder = new ServiceCollection();
+			
+			serviceBuilder = ConfigureLogging(serviceBuilder, systemConfig, bootLog);
+
+			// When we need to add things like an IHttpClientFactory, and other
+			// non-domain-specific services to the utility provider, we'll do that
+			// here.
+
 			ServiceProvider services = serviceBuilder.BuildServiceProvider();
 
 			return services;
 		}
 
-		static IAccountManager GetAccountManager(
-			IConfiguration config,
-			IServiceProvider? standardDependencies = null)
+		private static IServiceCollection ConfigureLogging(
+			IServiceCollection serviceBuilder,
+        	IConfiguration config,
+        	ILogger? logger = null)
 		{
-			var factory = new CustomerAccountManagerFactory();
+			try
+			{
+				serviceBuilder.AddLogging(logBuilder =>
+				{
+					var logConfig = config.GetSection("Logging");
+					if(logConfig != null)
+					{
+						logBuilder.AddConfiguration(logConfig);
+					}
+					logBuilder.AddConsole();
+				});
+				logger?.LogInformation("Global Logging Added to SharedServices.");
+			}
+			catch (Exception ex)
+			{
+				logger?.LogWarning(ex, "Global logging could not be added.  System will not log at runtime.");
+			}
 
-			return factory.CreateService(config, standardDependencies);
+			return serviceBuilder;
 		}
 
-		private static IConfiguration LoadSystemConfiguration()
+		private static IConfiguration LoadSystemConfiguration(ILogger bootLog)
 		{
+			#if DEBUG
+			bootLog.LogInformation("Running in local debug mode.  Load custom environment variables from .env file.");
 			Env.Load();
+			#endif
+			
 			var builder = new ConfigurationBuilder()
 				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 				.AddEnvironmentVariables();
 			
+			bootLog.LogInformation("Configuration Loaded.");
+
 			return builder.Build();
 		}
 	}

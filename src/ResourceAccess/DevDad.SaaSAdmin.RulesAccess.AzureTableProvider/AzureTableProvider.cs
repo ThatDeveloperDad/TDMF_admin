@@ -4,18 +4,14 @@ using ThatDeveloperDad.iFX.ServiceModel;
 namespace DevDad.SaaSAdmin.RulesAccess.AzureTableProvider
 {
 	internal class AzureTableProvider 
-	: ServiceBase, IRulesAccess
+	: IRulesAccess
 	{
 		public AzureTableProvider()
         {
-			
+			ConnectionString = string.Empty;
         }
 
-		private TableProviderOptions? Configuration
-			=> Options<TableProviderOptions>();
-
-		private string ConnectionString => Configuration?.ConnectionString
-			?? throw new Exception($"AzureTableProvider component requires a ConnectionString.");
+		private string ConnectionString {get;set;}
 
         public void LoadRules()
 		{

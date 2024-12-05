@@ -1,5 +1,4 @@
-using System;
-using System.Xml.XPath;
+using System.Threading.Tasks;
 using DevDad.SaaSAdmin.AccountManager.Contracts;
 using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 using DevDad.SaaSAdmin.UserIdentity.Abstractions;
@@ -9,8 +8,8 @@ namespace DevDad.SaaSAdmin.AccountManager.Internals;
 
 internal class CustomerBuilder
 {
-     private readonly IUserIdentityAccess _identityAccess;
-    private readonly IUserAccountAccess _accountAccess; 
+     private readonly IUserIdentityAccess? _identityAccess;
+    private readonly IUserAccountAccess? _accountAccess; 
 
     public CustomerBuilder(
         IUserAccountAccess accountAccess,
@@ -54,7 +53,7 @@ internal class CustomerBuilder
         CustomerProfile? profile = null;
         LoadIdentityRequest loadIdentityRequest = new(requestData, requestData.UserId);
 
-        var loadIdentityResponse = await _identityAccess.LoadUserIdentityAsync(loadIdentityRequest);
+        var loadIdentityResponse = await _identityAccess?.LoadUserIdentityAsync(loadIdentityRequest);
         
         if(loadIdentityResponse.Successful)
         {
