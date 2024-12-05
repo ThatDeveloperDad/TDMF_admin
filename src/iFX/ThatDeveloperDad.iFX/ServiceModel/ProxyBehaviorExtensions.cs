@@ -5,16 +5,16 @@ using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
 
 namespace ThatDeveloperDad.iFX.ServiceModel;
 
-public static class ProxyBehaviorExtensions
+internal static class ProxyBehaviorExtensions
 {
-    public static DynamicServiceProxy<T, TService> AddBehavior<T, TService>
+    public static PassthroughProxy<TContract, TService> AddBehavior<TContract, TService>
         (
-            this DynamicServiceProxy<T, TService> proxy, 
+            this PassthroughProxy<TContract, TService> proxy, 
             IOperationBehavior? behavior, 
             string? methodName = null
         )
-        where T: ISystemComponent
-        where TService: T
+        where TContract: ISystemComponent
+        where TService: class, TContract
     {
         if(behavior == null)
         {

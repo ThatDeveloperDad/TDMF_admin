@@ -1,4 +1,4 @@
-﻿using DevDad.SaaSAdmin.AccountManager;
+using DevDad.SaaSAdmin.AccountManager;
 using DevDad.SaaSAdmin.AccountManager.Contracts;
 using DotNetEnv;
 using Microsoft.Extensions.Configuration;

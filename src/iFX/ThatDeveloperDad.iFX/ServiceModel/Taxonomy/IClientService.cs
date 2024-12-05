@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 namespace ThatDeveloperDad.iFX.ServiceModel.Taxonomy
 {
 	/// <summary>
-	/// Identifies a service within the system that acts as a Public Client to the system.
+	/// Identifies a service within the system that acts as 
+	/// a Public Client to the subsystems materialized within.
 	/// 
 	/// In a solution that does not include a UserInterface client, there must at least be
 	/// some kind of API Client that provides the public "face" of this system.

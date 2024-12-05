@@ -9,35 +9,25 @@ namespace ThatDeveloperDad.iFX.Utilities;
 /// <summary>
 /// Specifies behavior that will execute before and/or after a method is invoked.
 /// </summary>
-public class LoggingBehavior<T> 
+public class CallTimerBehavior
     : IOperationBehavior
-    where T: ISystemComponent
+    
 {
     private ILogger? _logger;
-    private LoggingBehavior(ILogger? logger )
+    private ILoggerFactory _logFactory;
+
+    public CallTimerBehavior(ILoggerFactory logFactory)
     {
+        _logFactory = logFactory;
+        var logger = logFactory.CreateLogger($"CallTimer");
+
         _logger = logger;
     }
 
-    public static LoggingBehavior<T>? Create(IServiceProvider? serviceProvider = null)
+    public void SetBehaviorLabel(string label)
     {
-        if(serviceProvider == null)
-        {
-            return null;
-        }
-
-        var logFactory = serviceProvider.GetService<ILoggerFactory>();
-        return LoggingBehavior<T>.Create(logFactory);
-    }
-
-    public static LoggingBehavior<T>? Create(ILoggerFactory? logFactory = null)
-    {
-        if(logFactory == null)
-        {
-            return null;
-        }
-
-        return new LoggingBehavior<T>(logFactory.CreateLogger<T>());
+        // Replaces the default logger with a new logger that has the provided label.
+        _logger = _logFactory.CreateLogger(label);
     }
 
     private long? _methodStartedAt;

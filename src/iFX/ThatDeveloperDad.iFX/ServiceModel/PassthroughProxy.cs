@@ -6,16 +6,12 @@ using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
 
 namespace ThatDeveloperDad.iFX.ServiceModel;
 
-
-public class DynamicServiceProxy<T, TService>
-    : DispatchProxy
-    where T: ISystemComponent
-    where TService: T
+public abstract class PassthroughProxy
+    :DispatchProxy
 {
-    private TService? _serviceInstance;
-    private ConcurrentDictionary<string, List<IOperationBehavior>> _methodBehaviors
+    protected ConcurrentDictionary<string, List<IOperationBehavior>> _methodBehaviors
         = new();
-    private List<IOperationBehavior> _globalBehaviors = new();
+    protected List<IOperationBehavior> _globalBehaviors = new();
 
     internal void AddBehavior(IOperationBehavior behavior, string? methodName = null)
     {
@@ -33,27 +29,64 @@ public class DynamicServiceProxy<T, TService>
         _methodBehaviors[methodName].Add(behavior);
     }
 
-    public T CreateProxy(TService service)
+
+    public static PassthroughProxy? Build(Type contractType, Type serviceType, object serviceInstance)
     {
-        object proxy = Create<T, DynamicServiceProxy<T, T>>();
-        ((DynamicServiceProxy<T, T>)proxy).SetServiceInstance(service);
+        var proxyType = typeof(PassthroughProxy<,>).MakeGenericType(contractType, serviceType);
+        
+        //Because the Proxy is really only useful once it's been
+        // materialized around the Contract and Implementation, 
+        // we use a Default constructor to simplify instantiation.
+        var proxyInstance = Activator.CreateInstance(proxyType);
+
+        // Then, we get the actual "Typed" proxy by calling the CreateProxy 
+        // method to configure our instance as a TypedProxy.
+        var configureMethod = proxyType.GetMethod("CreateProxy");
+        var proxy = configureMethod!.Invoke(proxyInstance, new object[]{serviceInstance});
+
+        // And we can return it as an un-typed PassthroughProxy.
+        return proxy as PassthroughProxy;
+    }
+}
+
+internal class PassthroughProxy<TContract, TService>
+    : PassthroughProxy
+    where TContract: ISystemComponent
+    where TService: class, TContract
+{
+    private TService? _serviceInstance;
+
+    public TContract CreateProxy(TService service)
+    {
+        object proxy = Create<TContract, PassthroughProxy<TContract, TService>>();
+        ((PassthroughProxy<TContract, TService>)proxy).SetServiceInstance(service);
 
         foreach(var behavior in _globalBehaviors)
         {
-            ((DynamicServiceProxy<T, T>)proxy).AddBehavior(behavior);
+            ((PassthroughProxy<TContract, TService>)proxy).AddBehavior(behavior);
         }
 
         foreach(var key in _methodBehaviors.Keys)
         {
             foreach(var behavior in _methodBehaviors[key])
             {
-                ((DynamicServiceProxy<T, T>)proxy).AddBehavior(behavior, key);
+                ((PassthroughProxy<TContract, TService>)proxy).AddBehavior(behavior, key);
             }
         }
 
-        return (T)proxy;
+        return (TContract)proxy;
     }
 
+    /// <summary>
+    /// Runs any Pre-Call Behaviors that have been injected to the proxy.
+    /// Invokes the requested method on the service instance.
+    /// Runs any Post-Call Behaviors that have been injected to the proxy.
+    /// Returns the result of the call.
+    /// </summary>
+    /// <param name="targetMethod"></param>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
     {
         if(targetMethod == null)

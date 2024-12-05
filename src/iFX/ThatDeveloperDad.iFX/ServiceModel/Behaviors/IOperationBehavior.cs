@@ -4,6 +4,8 @@ namespace ThatDeveloperDad.iFX.Behaviors;
 
 public interface IOperationBehavior
 {
+    void SetBehaviorLabel(string label);
+
     Task OnMethodEntryAsync(MethodContext context)
         => Task.CompletedTask;
     Task OnMethodExitAsync(MethodContext context)
