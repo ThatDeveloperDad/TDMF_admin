@@ -9,7 +9,7 @@ namespace TestConsole
 {
 	internal class Program
 	{
-		static  void Main(string[] args)
+		static void Main(string[] args)
 		{
 			var bootLogger = CreateBootLogger();
 			IConfiguration systemConfig = LoadSystemConfiguration(bootLogger);
@@ -32,7 +32,15 @@ namespace TestConsole
 				return;
 			}
 
-			mgr.StoreCustomerProfile(new CustomerProfile());
+			// Test the LoadCustomerProfile method
+			string myUserId = "a0b66013-a5ef-462f-a812-3eb4aeacff66";
+			CustomerProfileRequest request = new CustomerProfileRequest("testing", myUserId);
+			var response = mgr.LoadOrCreateCustomerProfileAsync(request).Result;
+			var profile = response.Payload;
+
+			Console.WriteLine(profile?.UserId);
+			Console.WriteLine(profile?.DisplayName);
+
 
 			Console.WriteLine("Hello World!");
 			
