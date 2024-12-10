@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ThatDeveloperDad.iFX.ServiceModel;
 
@@ -20,6 +22,17 @@ public abstract class OperationResponse
     public void AddErrors(OperationResponse donor)
     {
         _errorsCollection.AddRange(donor._errorsCollection);
+    }
+
+//TODO:  Hey Dude!  Pull this change over to the main Framework repo later.
+    public bool HasErrorKind(string errorKind)
+    {
+        return _errorsCollection.Any(e => e.ErrorKind == errorKind);
+    }
+
+    public void ClearErrorKind(string errorKind)
+    {
+        _errorsCollection.RemoveAll(e => e.ErrorKind == errorKind);
     }
 
 }

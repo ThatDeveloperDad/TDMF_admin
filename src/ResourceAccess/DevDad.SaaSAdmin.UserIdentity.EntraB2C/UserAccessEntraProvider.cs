@@ -2,17 +2,27 @@
 using Microsoft.Graph;
 using ThatDeveloperDad.iFX.ServiceModel;
 using Azure.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace DevDad.SaaSAdmin.UserIdentity.EntraB2C;
 
-internal class UserAccessEntraProvider 
-    : ServiceBase, IUserIdentityAccess, IDisposable
+public class UserAccessEntraProvider 
+    : IUserIdentityAccess, IDisposable
 {
     public string IdentityVendor => "MS-Entra";
 
     private GraphServiceClient? _clientInstance;
     private ClientSecretCredential? _secret;
+    private readonly MsGraphOptions _options;
+    private readonly ILogger? _logger;
     private bool disposedValue;
+
+    public UserAccessEntraProvider(MsGraphOptions options,
+        ILoggerFactory? loggerFactory)
+    {
+        _logger = loggerFactory?.CreateLogger<UserAccessEntraProvider>();
+        _options = options;
+    }
 
     private GraphServiceClient MsGraph
     {
@@ -20,16 +30,16 @@ internal class UserAccessEntraProvider
         {
         if(_clientInstance == null)
         {
-            MsGraphOptions? options = (MsGraphOptions?)_options;
+           
 
-            if(options == null)
+            if(_options == null)
             {
                 throw new InvalidOperationException("Cannot connect to MS Graph.  Required configuration is missing.");
             }
             _secret = new ClientSecretCredential(
-                tenantId: options.TenantId,
-                clientId: options.ClientId,
-                clientSecret: options.ClientSecret
+                tenantId: _options.TenantId,
+                clientId: _options.ClientId,
+                clientSecret: _options.ClientSecret
             );
             
             _clientInstance = new GraphServiceClient(_secret, ["https://graph.microsoft.com/.default"]);
@@ -63,7 +73,7 @@ internal class UserAccessEntraProvider
                     Severity = ErrorSeverity.Error,
                     Message = "No user was found with the provided UserId.",
                     Site = "UserAccessEntraProvider.LoadUserIdentityAsync",
-                    ErrorKind = "UserNotFound"
+                    ErrorKind = "UserIdentity_NotFound"
                 });
                 return response;
             }
@@ -79,7 +89,7 @@ internal class UserAccessEntraProvider
         catch(Exception e)
         {
             // We're not awaiting this Log statement.  It's designed to be Fire & Forget.
-            _ = LogExceptionAsync(e);
+            _logger?.LogError(e, "An exception occurred while connecting to the Identity Store.");
             response.AddError(new ServiceError{
                 Severity = ErrorSeverity.Error,
                 Message = "An exception occurred while connecting to the Identity Store.",

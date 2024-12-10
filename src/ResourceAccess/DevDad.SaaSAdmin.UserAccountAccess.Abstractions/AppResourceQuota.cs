@@ -1,4 +1,5 @@
 using System;
+using DevDad.SaaSAdmin.iFX;
 
 namespace DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 
@@ -11,7 +12,7 @@ public class AppResourceQuota
     /// 
     /// i.e.:  Storage or AiTokens
     /// </summary>
-    public MeteredResourceKind MeteredResource { get; set; }
+    public MeteredResourceKinds MeteredResource { get; set; }
 
     /// <summary>
     /// Provides the specific name of the Resource that has the quota

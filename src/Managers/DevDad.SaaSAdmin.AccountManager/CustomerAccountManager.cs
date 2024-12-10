@@ -1,20 +1,28 @@
-﻿using DevDad.SaaSAdmin.AccountManager.Contracts;
+﻿using System;
+using System.Threading.Tasks;
+using DevDad.SaaSAdmin.AccountManager.Contracts;
 using DevDad.SaaSAdmin.AccountManager.Internals;
+using DevDad.SaaSAdmin.Catalog.Abstractions;
 using DevDad.SaaSAdmin.RulesAccess.Abstractions;
 using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 using DevDad.SaaSAdmin.UserIdentity.Abstractions;
+using Microsoft.Extensions.Logging;
 using ThatDeveloperDad.iFX.ServiceModel;
 using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
 
 namespace DevDad.SaaSAdmin.AccountManager
 {
-	internal sealed class CustomerAccountManager 
-	: ManagerBase, IAccountManager
+	public sealed class CustomerAccountManager 
+	: IAccountManager
 	{
-		private IRulesAccess _rulesAccess => GetProxy<IRulesAccess>();
-		private IUserIdentityAccess _userIdentityAccess => GetProxy<IUserIdentityAccess>();
-		private IUserAccountAccess _userAccountAccess => GetProxy<IUserAccountAccess>();
 		
+		private readonly IUserIdentityAccess _userIdentityAccess;
+		private readonly IUserAccountAccess _userAccountAccess;
+
+		private readonly ICatalogAccess _catalogAccess;
+		
+		private readonly ILogger? _logger;
+
 		private CustomerBuilder? _builderInstance;
 		private CustomerBuilder GetAccountBuilder()
 		{
@@ -24,27 +32,26 @@ namespace DevDad.SaaSAdmin.AccountManager
 				{
 					throw new Exception("The UserAccountAccess and UserIdentityAccess dependencies have not been properly initialized.");
 				}
-				_builderInstance = new CustomerBuilder(_userAccountAccess, _userIdentityAccess);
+				_builderInstance = new CustomerBuilder(_userAccountAccess, _userIdentityAccess, _catalogAccess);
 			}
 			return _builderInstance;
 		}
 		
-		//TODO:  This can go away once the rest of the Manager methods have been implemented.
-		private string GetConfigFrag()
+		public CustomerAccountManager(ILoggerFactory? loggerFactory,
+			IUserIdentityAccess userIdentityAccess,
+			IUserAccountAccess userAccountAccess,
+			ICatalogAccess catalogAccess)
 		{
-			string configFragment = string.Empty;
-			configFragment = Options<CustomerAccountManagerOptions>()?
-				.SomeContrivedNonsense
-				?? throw new Exception($"The {this.GetType().Name} component has not been properly configured.");
-
-			return configFragment;
+			_logger = loggerFactory?.CreateLogger<CustomerAccountManager>();
+			_userIdentityAccess = userIdentityAccess;
+			_userAccountAccess = userAccountAccess;
+			_catalogAccess = catalogAccess;
 		}
 
 		public async Task<CustomerProfileResponse> LoadOrCreateCustomerProfileAsync(CustomerProfileRequest requestData)
 		{
 			CustomerProfileResponse response = new(requestData);
 
-			_rulesAccess.LoadRules();
 			var builder = GetAccountBuilder();
 			
 			BuildProfileRequest builderRequest = new(requestData, requestData.UserId);
@@ -53,6 +60,7 @@ namespace DevDad.SaaSAdmin.AccountManager
 			
 			if(builderResponse.HasErrors)
 			{
+				
 				response.AddErrors(builderResponse);
 				return response;
 			}
@@ -74,16 +82,15 @@ namespace DevDad.SaaSAdmin.AccountManager
 
 		public (CustomerSubscription?, Exception?) ManageCustomerSubscription(SubscriptionActionRequest actionRequest)
 		{
-			Console.WriteLine($"ManageCustomerSubscription{GetConfigFrag()}");
+			_logger?.LogInformation($"ManageCustomerSubscription Executed.");
 			return (null, null);
 		}
 
 		public (CustomerProfile?, Exception?) StoreCustomerProfile(CustomerProfile profile)
 		{
-			Console.WriteLine($"StoreCustomerProfile{GetConfigFrag()}");
+			_logger?.LogInformation($"StoreCustomerProfile executed.");
 			return (null, null);
 		}
 
-        
     }
 }

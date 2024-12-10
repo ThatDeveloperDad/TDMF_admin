@@ -14,9 +14,7 @@ namespace ThatDeveloperDad.iFX.ServiceModel.Taxonomy
 	/// </summary>
 	public interface ISystemComponent
 	{
-		void SetConfiguration(IServiceOptions options);
-
-		IEnumerable<Type> ServiceArchetypes
+		internal IEnumerable<Type> ServiceArchetypes
 		{
 			get{
 				var archetypes = new List<Type>(){
