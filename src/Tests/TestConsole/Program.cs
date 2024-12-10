@@ -34,15 +34,15 @@ namespace TestConsole
 
 			// Test the LoadCustomerProfile method
 			string myUserId = "a0b66013-a5ef-462f-a812-3eb4aeacff66";
-			CustomerProfileRequest request = new CustomerProfileRequest("testing", myUserId);
+			string geekDadUserId = "eb4668e2-941a-480b-b132-d9300e9e6124";
+			CustomerProfileRequest request = new CustomerProfileRequest("testing", geekDadUserId);
 			var response = mgr.LoadOrCreateCustomerProfileAsync(request).Result;
 			var profile = response.Payload;
 
 			Console.WriteLine(profile?.UserId);
 			Console.WriteLine(profile?.DisplayName);
-
-
-			Console.WriteLine("Hello World!");
+			Console.WriteLine(profile?.Subscription?.SKU);
+			Console.WriteLine(profile?.SubscriptionStatus);
 			
 			bootLogger.LogInformation("Nothing more to do.  Imma take a nap right here.");
 		}

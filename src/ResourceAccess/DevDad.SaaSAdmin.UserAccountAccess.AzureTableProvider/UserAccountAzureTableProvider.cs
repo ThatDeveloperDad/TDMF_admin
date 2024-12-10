@@ -27,26 +27,71 @@ public class UserAccountAzureTableProvider
     {
         UserAccountResource? userAccount = null;
 
+        UserEntity? userEntity = null;
+
         var tableClient = _tableService
             .GetTableClient(UserEntity.BaseTableName);
-        var userEntity = await tableClient
-            .GetEntityAsync<UserEntity>(UserEntity.TablePartitionId, accountId);
 
-        if(userEntity != null)
+        var userEntityResponse = await tableClient
+            .GetEntityIfExistsAsync<UserEntity>(
+                UserEntity.TablePartitionId, 
+                accountId);
+        if(userEntityResponse.GetRawResponse().Status == 200)
         {
-            userAccount = userEntity.Value.ToResource();
+            userEntity = userEntityResponse.Value;
         }
         else
         {
-            _logger?.LogInformation($"UserAccount {accountId} not found.");
+            _logger?.LogWarning($"Retrieving User Account for user id {accountId} failed: {userEntityResponse.GetRawResponse().ReasonPhrase}");
         }
+        
+        userAccount = userEntity?.ToResource()??null;
         
         return userAccount;
     }
 
-    public async Task<UserAccountResource?> SaveUserAccountAsync(UserAccountResource userAccount)
+    public async Task<(UserAccountResource?, ServiceError?)> SaveUserAccountAsync(UserAccountResource userAccount)
     {
-        Console.WriteLine($"{this.GetType().Name} - LoadUserAccount {userAccount.UserId}");
-        return userAccount;
+        UserAccountResource? savedUserAccount = null;
+
+        var tableClient = _tableService
+            .GetTableClient(UserEntity.BaseTableName);
+
+        var userEntity = userAccount.ToEntity();
+
+        if(userEntity == null)
+        {
+            string warningMessage = $"User Account Resource could not be converted to UserEntity.";
+            _logger?.LogError(warningMessage);
+            ServiceError warning = new(){
+                ErrorKind = UserAccountErrors.UserAccountResource_Conversion,
+                Message = warningMessage,
+                Severity = ErrorSeverity.Warning,
+                Site = $"{nameof(UserAccountAzureTableProvider)}.{nameof(SaveUserAccountAsync)}",
+            };
+
+            return (userAccount, warning);
+        }
+
+        var userEntityResponse = await tableClient
+            .UpsertEntityAsync(userEntity);
+
+        if(userEntityResponse.IsError)
+        {
+            string errorMessage = $"Saving User Account for user id {userAccount.UserId} failed: {userEntityResponse.Status} - {userEntityResponse.ReasonPhrase}";
+            _logger?.LogError(errorMessage);
+
+            ServiceError error = new(){
+                ErrorKind = UserAccountErrors.UserAccountResource_StorageError,
+                Message = errorMessage,
+                Severity = ErrorSeverity.Error,
+                Site = $"{nameof(UserAccountAzureTableProvider)}.{nameof(SaveUserAccountAsync)}",
+            };
+            return (userAccount, error);
+        }
+
+        savedUserAccount = await LoadUserAccountAsync(userAccount.UserId);
+
+        return (savedUserAccount, null);
     }
 }

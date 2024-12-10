@@ -1,4 +1,5 @@
 using System;
+using DevDad.SaaSAdmin.iFX;
 
 namespace DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 
@@ -8,12 +9,12 @@ public class UserQuotaResource
     {
         Storage = new AppResourceQuota()
         {
-            MeteredResource = MeteredResourceKind.NpcStorage,
+            MeteredResource = MeteredResourceKinds.NpcStorage,
             QuotaId = 1,
         };
         AiGenerations = new AppResourceQuota()
         {
-            MeteredResource = MeteredResourceKind.NpcAiDetail,
+            MeteredResource = MeteredResourceKinds.NpcAiDetail,
             QuotaId = 2,
         };
         

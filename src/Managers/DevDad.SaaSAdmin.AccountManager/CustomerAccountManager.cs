@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using DevDad.SaaSAdmin.AccountManager.Contracts;
 using DevDad.SaaSAdmin.AccountManager.Internals;
+using DevDad.SaaSAdmin.Catalog.Abstractions;
 using DevDad.SaaSAdmin.RulesAccess.Abstractions;
 using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 using DevDad.SaaSAdmin.UserIdentity.Abstractions;
@@ -14,9 +15,11 @@ namespace DevDad.SaaSAdmin.AccountManager
 	public sealed class CustomerAccountManager 
 	: IAccountManager
 	{
-		private readonly IRulesAccess? _rulesAccess;
+		
 		private readonly IUserIdentityAccess _userIdentityAccess;
-		private readonly IUserAccountAccess? _userAccountAccess;
+		private readonly IUserAccountAccess _userAccountAccess;
+
+		private readonly ICatalogAccess _catalogAccess;
 		
 		private readonly ILogger? _logger;
 
@@ -29,25 +32,26 @@ namespace DevDad.SaaSAdmin.AccountManager
 				{
 					throw new Exception("The UserAccountAccess and UserIdentityAccess dependencies have not been properly initialized.");
 				}
-				_builderInstance = new CustomerBuilder(_userAccountAccess, _userIdentityAccess);
+				_builderInstance = new CustomerBuilder(_userAccountAccess, _userIdentityAccess, _catalogAccess);
 			}
 			return _builderInstance;
 		}
 		
 		public CustomerAccountManager(ILoggerFactory? loggerFactory,
 			IUserIdentityAccess userIdentityAccess,
-			IUserAccountAccess userAccountAccess)
+			IUserAccountAccess userAccountAccess,
+			ICatalogAccess catalogAccess)
 		{
 			_logger = loggerFactory?.CreateLogger<CustomerAccountManager>();
 			_userIdentityAccess = userIdentityAccess;
 			_userAccountAccess = userAccountAccess;
+			_catalogAccess = catalogAccess;
 		}
 
 		public async Task<CustomerProfileResponse> LoadOrCreateCustomerProfileAsync(CustomerProfileRequest requestData)
 		{
 			CustomerProfileResponse response = new(requestData);
 
-			_rulesAccess?.LoadRules();
 			var builder = GetAccountBuilder();
 			
 			BuildProfileRequest builderRequest = new(requestData, requestData.UserId);
@@ -56,6 +60,7 @@ namespace DevDad.SaaSAdmin.AccountManager
 			
 			if(builderResponse.HasErrors)
 			{
+				
 				response.AddErrors(builderResponse);
 				return response;
 			}

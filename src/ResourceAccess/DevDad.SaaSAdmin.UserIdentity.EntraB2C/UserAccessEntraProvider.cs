@@ -73,7 +73,7 @@ public class UserAccessEntraProvider
                     Severity = ErrorSeverity.Error,
                     Message = "No user was found with the provided UserId.",
                     Site = "UserAccessEntraProvider.LoadUserIdentityAsync",
-                    ErrorKind = "UserNotFound"
+                    ErrorKind = "UserIdentity_NotFound"
                 });
                 return response;
             }

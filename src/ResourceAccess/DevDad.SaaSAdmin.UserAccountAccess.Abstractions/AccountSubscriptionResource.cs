@@ -6,6 +6,7 @@ public class AccountSubscriptionResource
 {
 
     public string UserId { get; set; } = string.Empty;
+    public string SKU { get; set; } = string.Empty;
 
     public DateTime StartDateUtc { get; set; }
 

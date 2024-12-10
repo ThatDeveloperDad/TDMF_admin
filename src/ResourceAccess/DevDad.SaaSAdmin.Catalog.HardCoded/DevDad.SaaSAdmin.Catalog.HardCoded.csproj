@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../iFX/DevDad.SaaSAdmin.iFX/DevDad.SaaSAdmin.iFX.csproj" />
-    <ProjectReference Include="../../iFX/ThatDeveloperDad.iFX/ThatDeveloperDad.iFX.csproj" />
+    <ProjectReference Include="../DevDad.SaaSAdmin.Catalog.Abstractions/DevDad.SaaSAdmin.Catalog.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>
