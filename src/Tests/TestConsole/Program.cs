@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThatDeveloperDad.iFX;
+using ThatDeveloperDad.iFX.CollectionUtilities;
 
 namespace TestConsole
 {
@@ -11,6 +12,10 @@ namespace TestConsole
 	{
 		static void Main(string[] args)
 		{
+			// Get rid of this once the Filter Class is tested.
+			OtherTests.FilterTests.TestFilterClass();
+			return;
+
 			var bootLogger = CreateBootLogger();
 			IConfiguration systemConfig = LoadSystemConfiguration(bootLogger);
 			IServiceProvider globalUtilities = BuildUtilityProvider(systemConfig, bootLogger);
@@ -46,6 +51,8 @@ namespace TestConsole
 			
 			bootLogger.LogInformation("Nothing more to do.  Imma take a nap right here.");
 		}
+
+		
 
 		static ILogger CreateBootLogger()
 		{

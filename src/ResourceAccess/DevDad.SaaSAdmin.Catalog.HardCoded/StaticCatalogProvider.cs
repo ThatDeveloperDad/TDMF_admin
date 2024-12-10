@@ -12,12 +12,20 @@ namespace DevDad.SaaSAdmin.Catalog.HardCoded;
 /// </summary>
 public class StaticCatalogProvider : ICatalogAccess
 {
-
+    public const string SKUS_TDMF_PD_MNTH = "DM-FAMILIAR-PD-MONTHLY";
+    public const string SKUS_TDMF_FR = "DM-FAMILIAR-FREE";
+    
     private List<SubscriptionTemplate> _catalog;
 
     public StaticCatalogProvider()
     {
         _catalog = PopulateCatalog();
+    }
+
+    public static IEnumerable<SubscriptionTemplate> GetCatalog()
+    {
+        var cp = new StaticCatalogProvider();
+        return cp.PopulateCatalog();
     }
 
     public Task<IEnumerable<FilteredSubscriptionItem>> FilterCatalog(string[] filter)
@@ -51,7 +59,7 @@ public class StaticCatalogProvider : ICatalogAccess
         List<SubscriptionTemplate> catalog = new();
 
         SubscriptionTemplate freeTemplate = new(){
-            SKU = "DM-FAMILIAR-FREE",
+            SKU = SKUS_TDMF_FR,
             Name = "The DM's Familiar - Free Tier",
             Description = "Provides access to the Random NPC Generator, and any characters created and saved during a paid subscription time.",
             RenewalPeriod = SubscriptionRenewalFrequencies.Permanent,
@@ -63,7 +71,7 @@ public class StaticCatalogProvider : ICatalogAccess
         catalog.Add(freeTemplate);
 
         SubscriptionTemplate paidTemplate = new(){
-            SKU = "DM-FAMILIAR-PD-MONTHLY",
+            SKU = SKUS_TDMF_PD_MNTH,
             Name = "The DM's Familiar - Monthly Subscription",
             Description = "Provides access to the RandomNPC Generator, up to 100 AI Descriptions per month, and Storage Space for up to 100 NPCs.",
             RenewalPeriod = SubscriptionRenewalFrequencies.Monthly,
