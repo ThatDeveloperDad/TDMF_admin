@@ -1,18 +1,21 @@
 using System;
+using System.Reflection;
+using ThatDeveloperDad.iFX.DomainUtilities;
+using ThatDeveloperDad.iFX.DomainUtilities.Attributes;
+using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
 
 namespace DevDad.SaaSAdmin.Catalog.Abstractions;
 
-public class SubscriptionTemplate
+public class SubscriptionTemplateResource 
 {
-
-    public SubscriptionTemplate()
+    public SubscriptionTemplateResource()
     {
         SKU = string.Empty;
         Name = string.Empty;
         Description = string.Empty;
         ConfersMembershipIn = Array.Empty<string>();
         RenewalPeriod = 0;
-        ResourceGrants = new List<ResourceGrant>();
+        ResourceGrants = new List<QuotaGrantResource>();
         AllowedStatuses = Array.Empty<string>();
         DefaultStatus = string.Empty;
     }
@@ -36,7 +39,7 @@ public class SubscriptionTemplate
     /// Describes how often the subscription will renew.
     public int RenewalPeriod { get; set; }
 
-    public List<ResourceGrant> ResourceGrants { get; private set; }
+    public List<QuotaGrantResource> ResourceGrants { get; private set; }
 
     /// <summary>
     /// Provides the lists of Statuses that are allowed for this Subsctiption Template.

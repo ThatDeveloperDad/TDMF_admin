@@ -170,7 +170,7 @@ internal static class CustomerProfileMappingExtensions
         return model;
     }
 
-    public static CustomerSubscription ToNewSubscription(this SubscriptionTemplate template)
+    public static CustomerSubscription ToNewSubscription(this SubscriptionTemplateResource template)
     {
         CustomerSubscription model = new();
 

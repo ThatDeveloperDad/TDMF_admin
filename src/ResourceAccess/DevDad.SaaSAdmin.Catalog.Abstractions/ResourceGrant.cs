@@ -3,7 +3,7 @@ using DevDad.SaaSAdmin.iFX;
 
 namespace DevDad.SaaSAdmin.Catalog.Abstractions;
 
-public class ResourceGrant
+public class QuotaGrantResource
 {
     /// <summary>
     /// What kind of Metered Resource are we controlling with this?

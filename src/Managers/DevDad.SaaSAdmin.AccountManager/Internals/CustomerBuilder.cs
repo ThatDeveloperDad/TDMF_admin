@@ -6,6 +6,9 @@ using DevDad.SaaSAdmin.Catalog.Abstractions;
 using DevDad.SaaSAdmin.iFX;
 using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 using DevDad.SaaSAdmin.UserIdentity.Abstractions;
+using ThatDeveloperDad.iFX.CollectionUtilities;
+using ThatDeveloperDad.iFX.CollectionUtilities.Operators;
+using ThatDeveloperDad.iFX.DomainUtilities;
 using ThatDeveloperDad.iFX.ServiceModel;
 
 namespace DevDad.SaaSAdmin.AccountManager.Internals;
@@ -82,8 +85,8 @@ internal class CustomerBuilder
         var loadIdentityResponse = await _identityAccess.LoadUserIdentityAsync(loadIdentityRequest);
         if(loadIdentityResponse.Successful)
         {
-            profile = profile.ApplyIdentityFrom(loadIdentityResponse.Payload!);
-
+            profile = DomainObjectMapper.Map<UserIdentityResource, CustomerProfile>(
+                loadIdentityResponse.Payload!);   
             response.Payload = profile;
             return response;
         }
@@ -195,8 +198,33 @@ internal class CustomerBuilder
 
         // There isn't a paid subscription.  (This is a brand new user)
         // Create a new subscription from the Free Template.
-        var freeSubSpec = await _catalogAccess.GetCatalogItemAsync("DM-FAMILIAR-FREE");
+        Filter<SubscriptionTemplateResource> freeSubFilter = new();
+        string freeSubSku = SubscriptionIdentifiers.SKUS_TDMF_FREE;
+        freeSubFilter.AddCriteria(
+            propertyName:nameof(SubscriptionTemplateResource.SKU), 
+            expectedValue: freeSubSku,
+            operatorKind: OperatorKinds.Equals);
 
+        // We need a subscription template from which to build the initial, default
+        // "Subscription" that all users start with.
+        var filteredCatalog = await _catalogAccess.FilterCatalogAsync(freeSubFilter);
+        var freeTemplateSku = filteredCatalog.FirstOrDefault()?.SKU;
+        if(string.IsNullOrWhiteSpace(freeTemplateSku) == true)
+        {
+            response.AddError(new ServiceError
+            {
+                Message = $"Could not locate a subscription template with SKU {freeSubSku}, so could not finish creating the Profile.",
+                Severity = ErrorSeverity.Error,
+                Site = $"{nameof(CustomerBuilder)}.{nameof(CreateLocalProfile)}",
+                ErrorKind = "SubscriptionTemplateNotFound"
+            });
+            return response;
+        }
+
+        var freeSubSpec = await _catalogAccess.GetCatalogItemAsync(freeTemplateSku);
+
+        // Now, we use that tempalte to create a new subcription that gets added to
+        // the accountProfile.
         var subscription = freeSubSpec?.ToNewSubscription();
         if(subscription != null)
         {

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using ThatDeveloperDad.iFX.CollectionUtilities.Operators;
+using ThatDeveloperDad.iFX.DomainUtilities;
 
 namespace ThatDeveloperDad.iFX.CollectionUtilities;
 
@@ -153,6 +154,8 @@ public class Filter<T> : Filter
     private Func<T, bool>? _filterQuery;
     private ParameterExpression _collectionTypeExpression;
 
+    internal List<FilterCriteria> Criteria => _filterCriteria;
+
     public Filter() : base(typeof(T))
     {
         _collectionTypeExpression = Expression.Parameter(typeof(T), "x");
@@ -199,7 +202,10 @@ public class Filter<T> : Filter
             .Aggregate((prev, current) => Expression.AndAlso(prev, current));
         
         // Now we can create the Lambda.
-        Expression<Func<T, bool>> lambda = Expression.Lambda<Func<T, bool>>(composedFilterBody, _collectionTypeExpression);
+        Expression<Func<T, bool>> lambda = Expression
+            .Lambda<Func<T, bool>>(
+                composedFilterBody, 
+                _collectionTypeExpression);
         
         query = lambda.Compile();
         // Store the stringified version for logging and debugging.

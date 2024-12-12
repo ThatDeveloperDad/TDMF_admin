@@ -13,8 +13,8 @@ namespace TestConsole
 		static void Main(string[] args)
 		{
 			// Get rid of this once the Filter Class is tested.
-			OtherTests.FilterTests.TestFilterClass();
-			return;
+/* 			OtherTests.FilterTests.TestFilterClass();
+			return; */
 
 			var bootLogger = CreateBootLogger();
 			IConfiguration systemConfig = LoadSystemConfiguration(bootLogger);

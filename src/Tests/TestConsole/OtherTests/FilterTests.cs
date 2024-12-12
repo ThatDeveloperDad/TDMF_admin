@@ -13,25 +13,23 @@ public class FilterTests
         Console.WriteLine("Testing the Filter class.");
         var col = StaticCatalogProvider.GetCatalog();
         
-        //TestMultipleCriteria(col);
+        TestMultipleCriteria(col);
 
         //TestContainsOperator(col);
 
-        TestContainedInOperator(col);
+        //TestContainedInOperator(col);
 
     }
 
-    private static void TestMultipleCriteria(IEnumerable<SubscriptionTemplate> col)
+    private static void TestMultipleCriteria(IEnumerable<SubscriptionTemplateResource> col)
     {
         Console.WriteLine("Test with simple criteria.");
         Console.WriteLine();
-        Filter<SubscriptionTemplate> filter = new();
+        Filter<SubscriptionTemplateResource> filter = new();
         filter.AddCriteria(
-            propertyName: nameof(SubscriptionTemplate.SKU), 
+            propertyName: nameof(SubscriptionTemplateResource.SKU), 
             operatorKind: OperatorKinds.Equals, 
             expectedValue: StaticCatalogProvider.SKUS_TDMF_FR);
-        
-        
 
         var filtered = filter.ApplyFilter(col);
 
@@ -42,7 +40,7 @@ public class FilterTests
         Console.WriteLine();
         Console.WriteLine("Add a criteria and do it again.");
         filter.AddCriteria(
-            propertyName: nameof(SubscriptionTemplate.RenewalPeriod), 
+            propertyName: nameof(SubscriptionTemplateResource.RenewalPeriod), 
             operatorKind: OperatorKinds.LessThan, 
             expectedValue: 100);
         
@@ -55,13 +53,13 @@ public class FilterTests
         Console.WriteLine("-----------------");
     }
 
-    private static void TestContainsOperator(IEnumerable<SubscriptionTemplate> col)
+    private static void TestContainsOperator(IEnumerable<SubscriptionTemplateResource> col)
     {
         Console.WriteLine("Test the Contains operator.");
         Console.WriteLine();
-        var filter = new Filter<SubscriptionTemplate>();
+        var filter = new Filter<SubscriptionTemplateResource>();
         filter.AddCriteria(
-            propertyName: nameof(SubscriptionTemplate.Name), 
+            propertyName: nameof(SubscriptionTemplateResource.Name), 
             operatorKind: OperatorKinds.Contains, 
             expectedValue: "Familiar");
         
@@ -71,7 +69,7 @@ public class FilterTests
         Console.WriteLine($"Filtered Count:  {results.Count()}");
 
         filter.AddCriteria(
-            propertyName: nameof(SubscriptionTemplate.Name), 
+            propertyName: nameof(SubscriptionTemplateResource.Name), 
             operatorKind: OperatorKinds.Contains, 
             expectedValue: "Free");
         results = filter.ApplyFilter(col);
@@ -81,14 +79,14 @@ public class FilterTests
         Console.WriteLine("-----------------");
     }
 
-    private static void TestContainedInOperator(IEnumerable<SubscriptionTemplate> col)
+    private static void TestContainedInOperator(IEnumerable<SubscriptionTemplateResource> col)
     {
         Console.WriteLine("Test the ContainedIn operator.");
         Console.WriteLine();
-        var filter = new Filter<SubscriptionTemplate>();
+        var filter = new Filter<SubscriptionTemplateResource>();
         int[] allowedSkus = new[] { 7, 30, 365 };
         filter.AddCriteria(
-            propertyName: nameof(SubscriptionTemplate.RenewalPeriod), 
+            propertyName: nameof(SubscriptionTemplateResource.RenewalPeriod), 
             operatorKind: OperatorKinds.IsContainedIn, 
             expectedValue: allowedSkus);
         

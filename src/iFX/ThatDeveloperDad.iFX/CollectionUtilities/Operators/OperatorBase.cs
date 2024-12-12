@@ -194,15 +194,16 @@ public class ContainsOperator : OperatorBase
         // Gonna use the ! null-forgiving operator on this next line, because DUH!
         MethodInfo containsMethod = exprType.GetMethod(nameof(string.Contains), new[] { exprType })!;
 
+        // This next line turns:  Object.StringProperty.Contains("expected")
+        // Into a LINQ expression that can be combined with other expressions
+        // and compiled into a dynamically built predicate function AT RUN TIME.
         return Expression.Call(member, containsMethod, constant);
     }
 }
 
 public class IsContainedInOperator : OperatorBase
 {
-    public IsContainedInOperator() : base(OperatorKinds.IsContainedIn)
-    {
-    }
+    public IsContainedInOperator() : base(OperatorKinds.IsContainedIn) { }
 
     public override bool RequiresCollection=> true;
 
@@ -241,8 +242,17 @@ public class IsContainedInOperator : OperatorBase
                     .GetMethods(BindingFlags.Static | BindingFlags.Public)
                     .FirstOrDefault(m => m.Name == nameof(Enumerable.Contains)
                                      && m.GetParameters().Length == 2);
+        // baseMethod now holds an abstract, NOT TYPED version of:  
+        // Enumerable.Contains<T>(IEnumerable<T> collection, T value)
+        // where T is some Type that we aren't yet aware of.
 
         MethodInfo? containsMethod = baseMethod?.MakeGenericMethod(elementType);
+        // By calling "MakeGenericMethod" on baseMethod, we're getting the REAL
+        // Contains function that we want to work with.
+        // For example, if elementType is an int, then our constainsMethod will
+        // actually be:
+        // Enumerable.Contains<int>(IEnumerable<int> collection, int value)
+        // Same concept holds true for other types, including custom, complex types.
 
         if (containsMethod == null)
         {
