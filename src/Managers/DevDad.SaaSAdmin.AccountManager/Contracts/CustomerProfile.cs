@@ -23,8 +23,13 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 
 		public CustomerSubscription? Subscription { get; set; }
 
+		[EntityAttribute(Entities.ApplicationUser.Attributes.SubscriptionStatus)]
 		public string SubscriptionStatus { get; set; } = string.Empty;
 
+		[EntityAttribute(
+			entityAttributeName:Entities.ApplicationUser.Attributes.CorrelationIds,
+			isCollection:true,
+			valueEntityName:Entities.ExternalUserId.EntityName)]
 		public List<ExternalId> ExternalIds { get; set; } = new();
 	}
 }

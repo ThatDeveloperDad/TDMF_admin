@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using ThatDeveloperDad.iFX.CollectionUtilities;
@@ -15,6 +14,16 @@ namespace ThatDeveloperDad.iFX.DomainUtilities;
 /// </summary>
 public class DomainObjectMapper
 {
+    //TODO:  When we review the work we've done here, we should move over to ConcurrentDictionary
+    // for both of these in-mem caches. Explain why.
+
+    // Builds up a persistent runtime cache of IdiomaticTypes and the DomainEntity they represent.
+    // Hopfully, this will cust down on the number of reflection calls we need to make.
+    private static Dictionary<Type, string> _idiomEntityCache = new();
+    
+    // Builds up a persistent runtime cache of IdiomaticType pairs and the MethodInfo
+    // for the Generic Map<> method used to execute the mapping.
+    private static Dictionary<(Type, Type), MethodInfo> _mapMethodCache = new();
 
     /// <summary>
     /// Maps a class instance from its TSource idiom to an instance of the TDestination idiom.
@@ -32,7 +41,7 @@ public class DomainObjectMapper
     /// an Idiomatic Type of the DomainEntity, or that DomainEntity name is is different, we'll throw 
     /// and ArgumentException.
     /// </exception>
-    public static TDestination Map<TSource, TDestination>
+    public static TDestination MapEntities<TSource, TDestination>
         (
             TSource sourceInstance,
             TDestination? destinationInstance = default
@@ -45,10 +54,10 @@ public class DomainObjectMapper
             destinationInstance = Activator.CreateInstance<TDestination>();
         }
 
-        GuardTypesAreEquivalent<TSource, TDestination>();
+        GuardTypesAreEquivalent(sourceInstance, destinationInstance);
 
-        Dictionary<string, PropertyInfo> sourceMap = GetMappableProperties(typeof(TSource));
-        Dictionary<string, PropertyInfo> destinationMap = GetMappableProperties(typeof(TDestination));
+        Dictionary<string, PropertyInfo> sourceMap = sourceInstance.EntityProperties;
+        Dictionary<string, PropertyInfo> destinationMap = destinationInstance.EntityProperties;
         var commonKeys = sourceMap.Keys.Intersect(destinationMap.Keys);
 
         if(commonKeys.Count() == 0)
@@ -61,10 +70,172 @@ public class DomainObjectMapper
             PropertyInfo sourceProperty = sourceMap[sourceKey];
             PropertyInfo destinationProperty = destinationMap[sourceKey];
             object? sourceValue = sourceProperty.GetValue(sourceInstance);
-            destinationProperty.SetValue(destinationInstance, sourceValue);
+            
+            destinationInstance = ConvertAttribute
+                (
+                    destinationInstance, 
+                    sourceValue,
+                    sourceProperty,
+                    destinationProperty
+                );
         }
 
         return destinationInstance;
+    }
+
+    private static TDestination ConvertAttribute<TDestination>
+        (
+            TDestination destinationInstance, 
+            object? sourceValue, 
+            PropertyInfo sourceProperty, 
+            PropertyInfo destinationProperty
+        )
+    {
+        if(sourceValue == null)
+        {
+            return destinationInstance;
+        }
+
+        EntityAttributeAttribute attributeInfo = sourceProperty
+            .GetCustomAttribute<EntityAttributeAttribute>()!;
+
+        
+        object? destinationValue = null;
+
+        bool destinationAssigned = false;
+        // If the source and destination property types are assignable, we can just assign the value.
+        if(sourceProperty.PropertyType.IsAssignableTo(destinationProperty.PropertyType))
+        {
+            destinationValue = sourceValue;
+            destinationAssigned = true;
+        }
+
+        if(destinationAssigned == false 
+           && attributeInfo.IsCollection == false 
+           && attributeInfo.IsEntityValue == true)
+        {
+            destinationValue = ConvertEntityValue(
+                sourceValue, 
+                sourceProperty.PropertyType, 
+                destinationProperty.PropertyType);
+            destinationAssigned = true;
+        }
+
+        if(destinationAssigned == false 
+           && attributeInfo.IsCollection)
+        {            
+            destinationValue =  ConvertCollectionValue(sourceValue, sourceProperty, destinationProperty);
+            destinationAssigned = true;
+        }
+
+        if(destinationAssigned == false)
+        {
+            throw new ArgumentException("DomainObjectMapper.TransferAttributeValue has an unaccounted edge case.");
+        }
+
+        destinationProperty.SetValue(destinationInstance, destinationValue);
+        return destinationInstance;
+    }
+
+    // Create asimple mapping method for complex ENtity TYpes when we only have objects.
+    private static object? ConvertEntityValue
+        (
+            object? sourceValue, 
+            Type sourceType, 
+            Type destType
+        )
+    {
+        object? destinationValue = null;
+        if(sourceValue == null)
+        {
+            return destinationValue;
+        }
+
+        // Try the MapMethod cache first... ;)
+        if(_mapMethodCache.ContainsKey((sourceType, destType)))
+        {
+            MethodInfo mapMethod = _mapMethodCache[(sourceType, destType)];
+            destinationValue = mapMethod.Invoke(null, new object?[] { sourceValue, destinationValue });
+            return destinationValue;
+        }
+
+        // We need to make sure the source & destination are compatible.
+        string sourceEntity = GetEntityName(sourceType);
+        string destEntity = GetEntityName(destType);
+        if(sourceEntity != destEntity)
+        {
+            throw new ArgumentException($"Cannot map between types that do not express the same Entity.  Source: {sourceEntity}, Destination: {destEntity}");
+        }
+
+        MethodInfo baseMap = typeof(DomainObjectMapper)
+            .GetMethod(nameof(MapEntities), BindingFlags.Public | BindingFlags.Static)!;
+
+        MethodInfo typedMap = baseMap.MakeGenericMethod(
+            sourceType, 
+            destType);
+
+        destinationValue = typedMap.Invoke(null, new object?[] { sourceValue, null });
+
+        // if we got this far without an exception, let's cache the mapping method with the Type Pair.
+        _mapMethodCache.Add((sourceType, destType), typedMap);
+
+        return destinationValue;
+    }
+
+    /// <summary>
+    /// Determines the correct Type of collection expected by the destination property,
+    /// then populates it from the sourceValue.
+    /// 
+    /// This will work whether we're dealing with collections of simp[le values,
+    /// or collections of IdiomaticTypes.
+    /// 
+    /// This will not work for collections of complex Non-Domain types.
+    /// </summary>
+    /// <param name="sourceValue">The VALUE of the source Property on the DomainEntity being mapped</param>
+    /// <param name="sourceProp">The PropertyInfo for the Source being mapped FROM.</param>
+    /// <param name="destProp">The PropertyInfo for the destination instance property that we're mapping TO</param>
+    /// <returns>An instance of the Type expected by the Destination Property</returns>
+    private static object? ConvertCollectionValue(object? sourceValue, PropertyInfo sourceProp, PropertyInfo destProp)
+    {
+        if(sourceValue == null)
+        {
+            return null;
+        }
+
+        Type sourceElementType = sourceProp.PropertyType.GetGenericArguments().FirstOrDefault()!;
+        IEnumerable<object?> sourceCollection = (IEnumerable<object?>)sourceValue;
+
+        // Need to create a destination list of the same element type of the destination Property.
+        // Otherwise, iwe lose type fidelity and the runtime throws exceptions.
+        Type destinationElementType = destProp.PropertyType.GetGenericArguments().FirstOrDefault()!;
+        Type destListType = typeof(List<>).MakeGenericType(destinationElementType);
+        
+        // Because Activator.CreateInstance returns an object?, And we can't cast to a 
+        // generic type that we only know at runtime, we have to use the non-generic IList.
+        // Don't worry, this works just fine.
+        var destList = (System.Collections.IList?)Activator.CreateInstance(destListType);
+        if(destList == null)
+        {
+            throw new ArgumentException($"Could not create the required destination List Type.");
+        }
+        // If we can map directly, our loop iterations will go WAY faster.
+        // Especially if we do this reflection call OUTSIDE of the loop.
+        bool canDirectMap = sourceElementType.IsAssignableTo(destinationElementType);
+
+        foreach(var element in sourceCollection)
+        {
+            if(canDirectMap == true)
+            {
+                destList.Add(element);
+            }
+            else
+            {
+                var destElement = ConvertEntityValue(element, sourceElementType, destinationElementType);
+                destList.Add(destElement);
+            }
+        }
+
+        return destList;
     }
 
     /// <summary>
@@ -107,7 +278,7 @@ public class DomainObjectMapper
     }
 
     /// <summary>
-    /// Use this when we have instances of the types to be mapped.
+    /// Compares the Types of the provided instances to ensure they represent the same DomainEntity.
     /// </summary>
     /// <typeparam name="TSource"></typeparam>
     /// <typeparam name="TDestination"></typeparam>
@@ -127,7 +298,7 @@ public class DomainObjectMapper
     }
 
     /// <summary>
-    /// use this when we don't have instances of the two types.
+    /// Determines whether two types are both Idiomatic of the same DomainEntity.
     /// </summary>
     /// <typeparam name="TSource"></typeparam>
     /// <typeparam name="TDestination"></typeparam>
@@ -154,10 +325,16 @@ public class DomainObjectMapper
     private static string GetEntityName(Type idiom)
     {
         string entityName;
+        if(_idiomEntityCache.ContainsKey(idiom))
+        {
+            return _idiomEntityCache[idiom];
+        }
+
         var entityAttribute = idiom.GetCustomAttribute<DomainEntityAttribute>();
         if(entityAttribute != null)
         {
             entityName = entityAttribute.EntityName;
+            _idiomEntityCache.Add(idiom, entityName);
             return entityName;
         }
 
@@ -190,6 +367,15 @@ public class DomainObjectMapper
         return entityAttributeName;
     }
 
+    /// <summary>
+    /// Looks for a property on the provided Type that is assigned to the provided EntityAttributeName.
+    /// 
+    /// Used when converting Filter Criteria from one Filter Target type to another, when the Filter
+    /// Targets are Idiomatic for the same DomainEntity.
+    /// </summary>
+    /// <param name="entityAttributeName"></param>
+    /// <param name="idiom"></param>
+    /// <returns></returns>
     private static string GetPropertyForAttribute(string entityAttributeName, Type idiom)
     {
         string propertyName = string.Empty;
@@ -210,22 +396,4 @@ public class DomainObjectMapper
         return propertyName;
     }
 
-    private static Dictionary<string, PropertyInfo> GetMappableProperties(Type idiom)
-    {
-        Dictionary<string, PropertyInfo> mappableProperties = new();
-        PropertyInfo[] properties = idiom.GetProperties()
-            .Where(p => p.GetCustomAttribute<EntityAttributeAttribute>() != null)
-            .ToArray();
-
-        foreach(var property in properties)
-        {
-            var entityAttribute = property.GetCustomAttribute<EntityAttributeAttribute>();
-            if(entityAttribute != null)
-            {
-                mappableProperties.Add(entityAttribute.EntityAttributeName, property);
-            }
-        }
-
-        return mappableProperties;
-    }
 }

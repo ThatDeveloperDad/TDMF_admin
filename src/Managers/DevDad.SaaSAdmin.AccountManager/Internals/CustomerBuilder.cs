@@ -85,7 +85,7 @@ internal class CustomerBuilder
         var loadIdentityResponse = await _identityAccess.LoadUserIdentityAsync(loadIdentityRequest);
         if(loadIdentityResponse.Successful)
         {
-            profile = DomainObjectMapper.Map<UserIdentityResource, CustomerProfile>(
+            profile = DomainObjectMapper.MapEntities<UserIdentityResource, CustomerProfile>(
                 loadIdentityResponse.Payload!);   
             response.Payload = profile;
             return response;
@@ -111,8 +111,8 @@ internal class CustomerBuilder
             return response;
         }
 
-        var account = await _accountAccess.LoadUserAccountAsync(profileUnderConstruction.UserId);
-        if(account == null)
+        var accountResource = await _accountAccess.LoadUserAccountAsync(profileUnderConstruction.UserId);
+        if(accountResource == null)
         {
             // Once the LoadUserAccountAsync method is return a Response object, we can simplify this.
             response.AddError(new ServiceError{
@@ -124,10 +124,14 @@ internal class CustomerBuilder
 
             return response;
         }
-
         // apply whatever comes in on the account object to the response Payload.
-        profileUnderConstruction.ApplyAccountFrom(account);
+        
+        // Old Extension Method way
+        //profileUnderConstruction.ApplyAccountFrom(accountResource);
 
+        // Shiny new DomainMapping way
+        profileUnderConstruction = DomainObjectMapper
+            .MapEntities(accountResource, profileUnderConstruction);
 
         // Finally, update the response payload and return.
         response.Payload = profileUnderConstruction;

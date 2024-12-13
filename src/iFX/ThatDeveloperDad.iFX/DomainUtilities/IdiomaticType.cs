@@ -48,4 +48,19 @@ public abstract class IdiomaticType : IDomainIdiom
             return _entityAttributes;
         }
     }
+
+    private Type? _localType;
+    public Type LocalType
+    {
+        get
+        {
+            // use the Lazy-load pattern here too.
+            if(_localType != null)
+            {
+                return _localType;
+            }
+            _localType = this.GetType();
+            return _localType;
+        }
+    }
 }

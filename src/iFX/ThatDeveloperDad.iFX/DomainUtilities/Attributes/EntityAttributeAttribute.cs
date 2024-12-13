@@ -14,12 +14,24 @@ public class EntityAttributeAttribute : Attribute
     /// </summary>
     public string EntityAttributeName { get; }
 
+    public bool IsCollection { get; }
+
+    public string? ValueEntityName { get; }
+
+    public bool IsEntityValue => (string.IsNullOrWhiteSpace(ValueEntityName) == false);
+
     /// <summary>
     /// Identifies the name of the Property in the Domain Entity that the decorated Property represents.
     /// </summary>
     /// <param name="entityAttributeName">The name of the Property in the Domain Entity that the decorated Property represents.</param>
-    public EntityAttributeAttribute(string entityAttributeName)
+    public EntityAttributeAttribute(string entityAttributeName,
+        bool isCollection = false,
+        string? valueEntityName = null)
     {
         EntityAttributeName = entityAttributeName;
+        IsCollection = isCollection;
+        ValueEntityName = valueEntityName;
     }
+
+
 }

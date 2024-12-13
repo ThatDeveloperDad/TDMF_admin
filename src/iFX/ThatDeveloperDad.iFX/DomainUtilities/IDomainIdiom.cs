@@ -17,5 +17,13 @@ public interface IDomainIdiom
     /// </summary>
     string EntityName { get; }
 
+    /// <summary>
+    /// A dictionary of the properties on the implementing class that are idiomatic expressions of the DomainEntity's Attributes.
+    /// </summary>
     Dictionary<string, PropertyInfo> EntityProperties { get; }
+
+    /// <summary>
+    /// Thre Type Descriptor for the implementation
+    /// </summary>
+    Type LocalType { get; }
 }
