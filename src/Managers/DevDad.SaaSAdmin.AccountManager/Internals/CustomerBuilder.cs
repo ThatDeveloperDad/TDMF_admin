@@ -128,8 +128,6 @@ internal class CustomerBuilder
         profileUnderConstruction = DomainObjectMapper
             .MapEntities(accountResource, profileUnderConstruction);
 
-        //profileUnderConstruction.ApplyAccountFrom(accountResource);
-
         // Finally, update the response payload and return.
         response.Payload = profileUnderConstruction;
         return response;
@@ -226,7 +224,7 @@ internal class CustomerBuilder
 
         // Now, we use that tempalte to create a new subcription that gets added to
         // the accountProfile.
-        var subscription = freeSubSpec?.ToNewSubscription();
+        var subscription = freeSubSpec?.BuildNewSubscription();
         if(subscription != null)
         {
             subscription.UserId = profile.UserId!;
@@ -242,23 +240,22 @@ internal class CustomerBuilder
         }
         
         // now we need to save the profile, and finally, we can return the response.
-
         try
         {
-            UserAccountResource? profileResource = profile.ToResourceModel();
+            //UserAccountResource? profileResource = profile.ToResourceModel();
+            UserAccountResource? profileResource = DomainObjectMapper
+                .MapEntities<CustomerProfile, UserAccountResource>(profile);
             var accessResponse = await _accountAccess.SaveUserAccountAsync(profileResource);
             
             if(accessResponse.Item2 == null)
             {
-                profile = profile.ApplyAccountFrom(accessResponse.Item1!);
+                profile = DomainObjectMapper.MapEntities(accessResponse.Item1!, profile);
             }
             else
             {
                 response.AddError(accessResponse.Item2);
                 return response;
             }
-
-            profile = profile.ApplyAccountFrom(profileResource);
         }
         catch
         {

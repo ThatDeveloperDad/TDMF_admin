@@ -53,10 +53,13 @@ public class UserAccountAzureTableProvider
     public async Task<(UserAccountResource?, ServiceError?)> SaveUserAccountAsync(UserAccountResource userAccount)
     {
         UserAccountResource? savedUserAccount = null;
-
-        var tableClient = _tableService
+        string saveStep = "Start";
+        try
+        {
+            var tableClient = _tableService
             .GetTableClient(UserEntity.BaseTableName);
 
+        saveStep = "Convert to Entity";
         var userEntity = userAccount.ToEntity();
 
         if(userEntity == null)
@@ -73,6 +76,7 @@ public class UserAccountAzureTableProvider
             return (userAccount, warning);
         }
 
+        saveStep = "Save Entity to Table";
         var userEntityResponse = await tableClient
             .UpsertEntityAsync(userEntity);
 
@@ -80,6 +84,20 @@ public class UserAccountAzureTableProvider
         {
             string errorMessage = $"Saving User Account for user id {userAccount.UserId} failed: {userEntityResponse.Status} - {userEntityResponse.ReasonPhrase}";
             _logger?.LogError(errorMessage);
+
+            ServiceError error = new(){
+                ErrorKind = UserAccountErrors.UserAccountResource_StorageError,
+                Message = errorMessage,
+                Severity = ErrorSeverity.Error,
+                Site = $"{nameof(UserAccountAzureTableProvider)}.{nameof(SaveUserAccountAsync)}",
+            };
+            return (userAccount, error);
+        }
+        }
+        catch(Exception ex)
+        {
+            string errorMessage = $"Saving User Account for user id {userAccount.UserId} failed at step {saveStep}: {ex.Message}";
+            _logger?.LogError(ex, errorMessage);
 
             ServiceError error = new(){
                 ErrorKind = UserAccountErrors.UserAccountResource_StorageError,

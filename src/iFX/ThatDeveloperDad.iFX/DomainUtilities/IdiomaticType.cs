@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ThatDeveloperDad.iFX.DomainUtilities;
 
@@ -17,8 +19,10 @@ public abstract class IdiomaticType : IDomainIdiom
     // It'd be really cool to build in a Roslyn Analyzer that would inspect
     // classes that inherit this and ensure that they are decorated with 
     // the DomainEntityAttribute.
+    [JsonIgnore]
     private string? _entityName;
     
+    [JsonIgnore]
     public string EntityName  
     {
         get
@@ -33,8 +37,9 @@ public abstract class IdiomaticType : IDomainIdiom
         }
     }
 
-
+    [JsonIgnore]
     private Dictionary<string, PropertyInfo>? _entityAttributes;
+    [JsonIgnore]
     public Dictionary<string, PropertyInfo> EntityProperties
     {
         get
@@ -49,7 +54,9 @@ public abstract class IdiomaticType : IDomainIdiom
         }
     }
 
+    [JsonIgnore]
     private Type? _localType;
+    [JsonIgnore]
     public Type LocalType
     {
         get
