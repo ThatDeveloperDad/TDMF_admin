@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThatDeveloperDad.iFX;
+using ThatDeveloperDad.iFX.CollectionUtilities;
+using ThatDeveloperDad.iFX.DomainUtilities;
 
 namespace TestConsole
 {
@@ -11,6 +13,10 @@ namespace TestConsole
 	{
 		static void Main(string[] args)
 		{
+			// Get rid of this once the Filter Class is tested.
+/* 			OtherTests.FilterTests.TestFilterClass();
+			return; */
+
 			var bootLogger = CreateBootLogger();
 			IConfiguration systemConfig = LoadSystemConfiguration(bootLogger);
 			IServiceProvider globalUtilities = BuildUtilityProvider(systemConfig, bootLogger);
@@ -35,7 +41,7 @@ namespace TestConsole
 			// Test the LoadCustomerProfile method
 			string myUserId = "a0b66013-a5ef-462f-a812-3eb4aeacff66";
 			string geekDadUserId = "eb4668e2-941a-480b-b132-d9300e9e6124";
-			CustomerProfileRequest request = new CustomerProfileRequest("testing", geekDadUserId);
+			CustomerProfileRequest request = new CustomerProfileRequest("testing", myUserId);
 			var response = mgr.LoadOrCreateCustomerProfileAsync(request).Result;
 			var profile = response.Payload;
 
@@ -43,9 +49,27 @@ namespace TestConsole
 			Console.WriteLine(profile?.DisplayName);
 			Console.WriteLine(profile?.Subscription?.SKU);
 			Console.WriteLine(profile?.SubscriptionStatus);
+
+			// Just logging the DomainMapper's private cache stats here.
+			// No need to do it every time, but it's handy to have around.
+			//DomainObjectMapper.ReportCacheStats();
+
+			request.Payload = geekDadUserId;
+			var geekResponse = mgr.LoadOrCreateCustomerProfileAsync(request).Result;
+			var geekProfile = geekResponse.Payload;
+
+			Console.WriteLine(geekProfile?.UserId);
+			Console.WriteLine(geekProfile?.DisplayName);
+			Console.WriteLine(geekProfile?.Subscription?.SKU);
+			Console.WriteLine(geekProfile?.SubscriptionStatus);
 			
+			// Let's see how the Caching helped (or not)
+			DomainObjectMapper.ReportCacheStats();
+
 			bootLogger.LogInformation("Nothing more to do.  Imma take a nap right here.");
 		}
+
+		
 
 		static ILogger CreateBootLogger()
 		{

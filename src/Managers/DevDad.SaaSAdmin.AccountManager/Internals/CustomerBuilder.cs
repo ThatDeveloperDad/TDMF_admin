@@ -6,6 +6,9 @@ using DevDad.SaaSAdmin.Catalog.Abstractions;
 using DevDad.SaaSAdmin.iFX;
 using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 using DevDad.SaaSAdmin.UserIdentity.Abstractions;
+using ThatDeveloperDad.iFX.CollectionUtilities;
+using ThatDeveloperDad.iFX.CollectionUtilities.Operators;
+using ThatDeveloperDad.iFX.DomainUtilities;
 using ThatDeveloperDad.iFX.ServiceModel;
 
 namespace DevDad.SaaSAdmin.AccountManager.Internals;
@@ -82,8 +85,8 @@ internal class CustomerBuilder
         var loadIdentityResponse = await _identityAccess.LoadUserIdentityAsync(loadIdentityRequest);
         if(loadIdentityResponse.Successful)
         {
-            profile = profile.ApplyIdentityFrom(loadIdentityResponse.Payload!);
-
+            profile = DomainObjectMapper.MapEntities<UserIdentityResource, CustomerProfile>(
+                loadIdentityResponse.Payload!);   
             response.Payload = profile;
             return response;
         }
@@ -108,8 +111,8 @@ internal class CustomerBuilder
             return response;
         }
 
-        var account = await _accountAccess.LoadUserAccountAsync(profileUnderConstruction.UserId);
-        if(account == null)
+        var accountResource = await _accountAccess.LoadUserAccountAsync(profileUnderConstruction.UserId);
+        if(accountResource == null)
         {
             // Once the LoadUserAccountAsync method is return a Response object, we can simplify this.
             response.AddError(new ServiceError{
@@ -121,10 +124,9 @@ internal class CustomerBuilder
 
             return response;
         }
-
-        // apply whatever comes in on the account object to the response Payload.
-        profileUnderConstruction.ApplyAccountFrom(account);
-
+        
+        profileUnderConstruction = DomainObjectMapper
+            .MapEntities(accountResource, profileUnderConstruction);
 
         // Finally, update the response payload and return.
         response.Payload = profileUnderConstruction;
@@ -195,16 +197,41 @@ internal class CustomerBuilder
 
         // There isn't a paid subscription.  (This is a brand new user)
         // Create a new subscription from the Free Template.
-        var freeSubSpec = await _catalogAccess.GetCatalogItemAsync("DM-FAMILIAR-FREE");
+        Filter<SubscriptionTemplateResource> freeSubFilter = new();
+        string freeSubSku = SubscriptionIdentifiers.SKUS_TDMF_FREE;
+        freeSubFilter.AddCriteria(
+            propertyName:nameof(SubscriptionTemplateResource.SKU), 
+            expectedValue: freeSubSku,
+            operatorKind: OperatorKinds.Equals);
 
-        var subscription = freeSubSpec?.ToNewSubscription();
+        // We need a subscription template from which to build the initial, default
+        // "Subscription" that all users start with.
+        var filteredCatalog = await _catalogAccess.FilterCatalogAsync(freeSubFilter);
+        var freeTemplateSku = filteredCatalog.FirstOrDefault()?.SKU;
+        if(string.IsNullOrWhiteSpace(freeTemplateSku) == true)
+        {
+            response.AddError(new ServiceError
+            {
+                Message = $"Could not locate a subscription template with SKU {freeSubSku}, so could not finish creating the Profile.",
+                Severity = ErrorSeverity.Error,
+                Site = $"{nameof(CustomerBuilder)}.{nameof(CreateLocalProfile)}",
+                ErrorKind = "SubscriptionTemplateNotFound"
+            });
+            return response;
+        }
+
+        var freeSubSpec = await _catalogAccess.GetCatalogItemAsync(freeTemplateSku);
+
+        // Now, we use that tempalte to create a new subcription that gets added to
+        // the accountProfile.
+        var subscription = freeSubSpec?.BuildNewSubscription();
         if(subscription != null)
         {
             subscription.UserId = profile.UserId!;
             subscription.History.Add(
                 new SubscriptionActivity(){
                     ActivityDateUTC = DateTime.UtcNow,
-                    ActivityKind = SubscriptionActivity.ActivityKind_Created
+                    ActivityKind = SubscriptionChangeKinds.ActivityKind_Created
                 }
             );
 
@@ -213,23 +240,22 @@ internal class CustomerBuilder
         }
         
         // now we need to save the profile, and finally, we can return the response.
-
         try
         {
-            UserAccountResource? profileResource = profile.ToResourceModel();
+            //UserAccountResource? profileResource = profile.ToResourceModel();
+            UserAccountResource? profileResource = DomainObjectMapper
+                .MapEntities<CustomerProfile, UserAccountResource>(profile);
             var accessResponse = await _accountAccess.SaveUserAccountAsync(profileResource);
             
             if(accessResponse.Item2 == null)
             {
-                profile = profile.ApplyAccountFrom(accessResponse.Item1!);
+                profile = DomainObjectMapper.MapEntities(accessResponse.Item1!, profile);
             }
             else
             {
                 response.AddError(accessResponse.Item2);
                 return response;
             }
-
-            profile = profile.ApplyAccountFrom(profileResource);
         }
         catch
         {
