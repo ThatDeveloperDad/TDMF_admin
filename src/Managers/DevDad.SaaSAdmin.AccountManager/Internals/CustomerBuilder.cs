@@ -124,14 +124,11 @@ internal class CustomerBuilder
 
             return response;
         }
-        // apply whatever comes in on the account object to the response Payload.
         
-        // Old Extension Method way
-        //profileUnderConstruction.ApplyAccountFrom(accountResource);
-
-        // Shiny new DomainMapping way
         profileUnderConstruction = DomainObjectMapper
             .MapEntities(accountResource, profileUnderConstruction);
+
+        //profileUnderConstruction.ApplyAccountFrom(accountResource);
 
         // Finally, update the response payload and return.
         response.Payload = profileUnderConstruction;
@@ -236,7 +233,7 @@ internal class CustomerBuilder
             subscription.History.Add(
                 new SubscriptionActivity(){
                     ActivityDateUTC = DateTime.UtcNow,
-                    ActivityKind = SubscriptionActivity.ActivityKind_Created
+                    ActivityKind = SubscriptionChangeKinds.ActivityKind_Created
                 }
             );
 

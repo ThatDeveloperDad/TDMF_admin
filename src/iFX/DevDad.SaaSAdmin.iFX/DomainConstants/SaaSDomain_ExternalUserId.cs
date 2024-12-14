@@ -1,5 +1,3 @@
-using System;
-
 namespace DevDad.SaaSAdmin.iFX.DomainConstants;
 
 public partial class SaaSDomain

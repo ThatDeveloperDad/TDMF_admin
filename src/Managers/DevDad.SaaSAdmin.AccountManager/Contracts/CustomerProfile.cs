@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using ThatDeveloperDad.iFX.DomainUtilities;
 using ThatDeveloperDad.iFX.DomainUtilities.Attributes;
 using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
@@ -21,6 +17,10 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 		[EntityAttribute(Entities.ApplicationUser.Attributes.DisplayName)]
 		public string DisplayName { get; set; } = string.Empty;
 
+ 		[EntityAttribute(
+			entityAttributeName:Entities.ApplicationUser.Attributes.Subscription,
+			valueEntityName:Entities.ApplicationSubscription.EntityName,
+			isCollection:false)] 
 		public CustomerSubscription? Subscription { get; set; }
 
 		[EntityAttribute(Entities.ApplicationUser.Attributes.SubscriptionStatus)]

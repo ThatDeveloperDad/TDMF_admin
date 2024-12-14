@@ -26,5 +26,9 @@ public class UserAccountResource : IdiomaticType
         valueEntityName:Entities.ExternalUserId.EntityName)]
     public List<UserIdResource> ExternalIds { get; set; } = new List<UserIdResource>();
 
+    [EntityAttribute(
+        entityAttributeName:Entities.ApplicationUser.Attributes.Subscription,
+        valueEntityName:Entities.ApplicationSubscription.EntityName,
+        isCollection:false)]
     public AccountSubscriptionResource? Subscription { get; set; }
 }

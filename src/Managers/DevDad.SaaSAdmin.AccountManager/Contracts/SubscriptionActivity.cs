@@ -1,4 +1,8 @@
 using System;
+using ThatDeveloperDad.iFX.DomainUtilities;
+using ThatDeveloperDad.iFX.DomainUtilities.Attributes;
+using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
+using Entities = DevDad.SaaSAdmin.iFX.DomainConstants.SaaSDomain;
 
 namespace DevDad.SaaSAdmin.AccountManager.Contracts;
 
@@ -6,16 +10,15 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts;
 /// Describes an activity that altered a Customer's Subscription in 
 /// some way.  This is purely for reporting purposes.
 /// </summary>
-public class SubscriptionActivity
+[DomainEntity(
+    entityName: Entities.SubscriptionHistoryEntry.EntityName, 
+    declaringArchetype: ComponentArchetype.Manager)]
+public class SubscriptionActivity:IdiomaticType
 {
-    public const string ActivityKind_Created = "Created";
-    public const string ActivityKind_Updated = "Renewed";
-    public const string ActivityKind_Expired = "Expired";
-    public const string ActivityKind_Cancelled = "Cancelled";
-    public const string ActivityKind_Suspended = "Suspended";
-    public const string ActivityKind_Resumed = "Resumed";
 
+    [EntityAttribute(Entities.SubscriptionHistoryEntry.Attributes.ActivityKind)]
     public string ActivityKind { get; set; } = string.Empty;
 
+    [EntityAttribute(Entities.SubscriptionHistoryEntry.Attributes.ActivityDateUtc)]
     public DateTime ActivityDateUTC { get; set; } = DateTime.UtcNow;
 }

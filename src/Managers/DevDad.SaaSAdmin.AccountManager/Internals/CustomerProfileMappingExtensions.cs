@@ -12,21 +12,7 @@ namespace DevDad.SaaSAdmin.AccountManager.Internals;
 
 internal static class CustomerProfileMappingExtensions
 {
-    public static CustomerProfile ApplyIdentityFrom(
-        this CustomerProfile? profile, 
-        UserIdentityResource identityResource)
-    {
-        if(profile == null)
-        {
-            profile = new();
-        }
-
-        profile.UserId = identityResource.UserId;
-        profile.DisplayName = identityResource.DisplayName;
-        
-        return profile;
-    }
-
+    
     public static CustomerProfile ApplyAccountFrom(
         this CustomerProfile? profile,
         UserAccountResource accountResource)
@@ -38,11 +24,8 @@ internal static class CustomerProfileMappingExtensions
 
         var subResource = accountResource.Subscription;
 
-        profile.Subscription = subResource.ToManagerModel();
+        profile.Subscription?.ImportHistory(subResource?.History);
         profile.SubscriptionStatus = subResource?.CurrentStatus??"None";
-        profile.ExternalIds = accountResource.ExternalIds
-            .Select(x=>x.ToManagerModel())
-            .ToList();
 
         return profile;
     }
@@ -60,16 +43,6 @@ internal static class CustomerProfileMappingExtensions
             .ToList();
 
         return resource;
-    }
-
-    private static ExternalId ToManagerModel(this UserIdResource resource)
-    {
-        ExternalId model = new();
-
-        model.Vendor = resource.VendorName;
-        model.IdAtVendor = resource.UserIdAtVendor;
-
-        return model;
     }
 
     private static UserIdResource ToResourceModel(this ExternalId externalId)
@@ -121,55 +94,6 @@ internal static class CustomerProfileMappingExtensions
         return resource;
     }
 
-    public static CustomerSubscription? ToManagerModel(this AccountSubscriptionResource? resource)
-    {
-        CustomerSubscription? model = null;
-
-        if(resource == null)
-        {
-            return model;
-        }
-
-        model = new CustomerSubscription()
-        {
-            UserId = resource.UserId,
-            SKU = resource.SKU,
-            StartDateUtc = resource.StartDateUtc,
-            EndDateUtc = resource.EndDateUtc,
-            WillRenew = resource.WillRenew,
-            CurrentStatus = resource.CurrentStatus,
-            Quotas = resource.Quotas.ToManagerModel()
-        };
-
-        model.ImportHistory(resource.History);
-        model.Quotas.UserId = model.UserId;
-
-        return model;
-    }
-
-    public static UserQuotas ToManagerModel(this UserQuotaResource? resource)
-    {
-        UserQuotas? model = null;
-
-        if(resource == null)
-        {
-            return new UserQuotas();
-        }
-
-        model = new UserQuotas()
-        {
-            UserId = resource.UserId
-        };
-
-        model.StoredNpcs.Budget = resource.Storage.Budget;
-        model.StoredNpcs.Consumption = resource.Storage.Consumption;
-
-        model.AiGeneratedNpcs.Budget = resource.AiGenerations.Budget;
-        model.AiGeneratedNpcs.Consumption = resource.AiGenerations.Consumption;
-
-        return model;
-    }
-
     public static CustomerSubscription ToNewSubscription(this SubscriptionTemplateResource template)
     {
         CustomerSubscription model = new();
@@ -193,7 +117,7 @@ internal static class CustomerProfileMappingExtensions
 
     private static void ImportHistory(
         this CustomerSubscription model, 
-        List<SubscriptionActivityResource> resourceHistory)
+        List<SubscriptionActivityResource>? resourceHistory)
     {
         if(resourceHistory == null)
         {

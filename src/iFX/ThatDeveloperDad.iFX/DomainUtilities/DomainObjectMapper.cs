@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using ThatDeveloperDad.iFX.CollectionUtilities;
 using ThatDeveloperDad.iFX.DomainUtilities.Attributes;
 
@@ -14,16 +16,30 @@ namespace ThatDeveloperDad.iFX.DomainUtilities;
 /// </summary>
 public class DomainObjectMapper
 {
-    //TODO:  When we review the work we've done here, we should move over to ConcurrentDictionary
-    // for both of these in-mem caches. Explain why.
 
+    private static int _nameCacheHits = 0;
+    private static int _nameCacheMisses = 0;
     // Builds up a persistent runtime cache of IdiomaticTypes and the DomainEntity they represent.
     // Hopfully, this will cust down on the number of reflection calls we need to make.
-    private static Dictionary<Type, string> _idiomEntityCache = new();
-    
+    private static ConcurrentDictionary<Type, string> _idiomEntityCache = new();
+
+    private static int _methodCacheHits = 0;
+    private static int _methodCacheMisses = 0;
     // Builds up a persistent runtime cache of IdiomaticType pairs and the MethodInfo
     // for the Generic Map<> method used to execute the mapping.
-    private static Dictionary<(Type, Type), MethodInfo> _mapMethodCache = new();
+    private static ConcurrentDictionary<(Type, Type), MethodInfo> _mapMethodCache = new();
+
+    public static void ReportCacheStats()
+    {
+        Console.WriteLine();
+        Console.WriteLine("--------- DomainMapper Type Cache Stats ---------");
+        Console.WriteLine($"EntityName Cache Hits: {_nameCacheHits}");
+        Console.WriteLine($"EntityName Cache Misses: {_nameCacheMisses}");
+        Console.WriteLine($"Method Cache Hits: {_methodCacheHits}");
+        Console.WriteLine($"Method Cache Misses: {_methodCacheMisses}");
+        Console.WriteLine("-------------------------------------------------");
+        Console.WriteLine();
+    }
 
     /// <summary>
     /// Maps a class instance from its TSource idiom to an instance of the TDestination idiom.
@@ -146,23 +162,27 @@ public class DomainObjectMapper
         )
     {
         object? destinationValue = null;
-        if(sourceValue == null)
+        if (sourceValue == null)
         {
             return destinationValue;
         }
 
+        MethodInfo? mapMethod = GetCachedMapMethod(sourceType, destType);
+
         // Try the MapMethod cache first... ;)
-        if(_mapMethodCache.ContainsKey((sourceType, destType)))
+        if (mapMethod != null)
         {
-            MethodInfo mapMethod = _mapMethodCache[(sourceType, destType)];
+            _methodCacheHits++;
             destinationValue = mapMethod.Invoke(null, new object?[] { sourceValue, destinationValue });
             return destinationValue;
         }
 
+        _methodCacheMisses++;
+
         // We need to make sure the source & destination are compatible.
         string sourceEntity = GetEntityName(sourceType);
         string destEntity = GetEntityName(destType);
-        if(sourceEntity != destEntity)
+        if (sourceEntity != destEntity)
         {
             throw new ArgumentException($"Cannot map between types that do not express the same Entity.  Source: {sourceEntity}, Destination: {destEntity}");
         }
@@ -171,15 +191,60 @@ public class DomainObjectMapper
             .GetMethod(nameof(MapEntities), BindingFlags.Public | BindingFlags.Static)!;
 
         MethodInfo typedMap = baseMap.MakeGenericMethod(
-            sourceType, 
+            sourceType,
             destType);
 
         destinationValue = typedMap.Invoke(null, new object?[] { sourceValue, null });
 
         // if we got this far without an exception, let's cache the mapping method with the Type Pair.
-        _mapMethodCache.Add((sourceType, destType), typedMap);
+        CacheConcreteTypedMapMethod(sourceType, destType, typedMap);
 
         return destinationValue;
+    }
+
+    private static void CacheConcreteTypedMapMethod(Type sourceType, Type destType, MethodInfo typedMap)
+    {
+        // If there's already a mapMethod for the Type Pair, we can bail.
+        if(_mapMethodCache.ContainsKey((sourceType, destType)))
+        {
+            return;
+        }
+
+        bool added = false;
+        int attemptCount = 0;
+        do
+        {
+            added = _mapMethodCache.TryAdd((sourceType, destType), typedMap);
+            if(added == false)
+            {
+                Task.Delay((attemptCount * 100)+50);
+            }
+            attemptCount++;
+        } while (added == false && attemptCount <3);
+    }
+
+    private static MethodInfo? GetCachedMapMethod(Type sourceType, Type destType)
+    {
+        MethodInfo? method = null;
+
+        int attemptCount = 0;
+        bool found = _mapMethodCache.TryGetValue((sourceType, destType), out method);
+        if(found == true)
+        {
+            return method;
+        }
+        
+        while (found == false && attemptCount < 3)
+        {
+            found = _mapMethodCache.TryGetValue((sourceType, destType), out method);
+            if(found == false)
+            {
+                Task.Delay((attemptCount * 50)+50);
+                attemptCount++;
+            }
+        }
+        
+        return method;
     }
 
     /// <summary>
@@ -324,21 +389,62 @@ public class DomainObjectMapper
     /// <exception cref="ArgumentException">If the provided Type does NOT express a DomainEntity, we can't work with it in this Mapper utility.</exception>
     private static string GetEntityName(Type idiom)
     {
-        string entityName;
-        if(_idiomEntityCache.ContainsKey(idiom))
+        string? entityName = GetCachedEntityIdiom(idiom);
+        if(entityName != null)
         {
-            return _idiomEntityCache[idiom];
+            _nameCacheHits++;
+            return entityName;
         }
 
+        _nameCacheMisses++;
         var entityAttribute = idiom.GetCustomAttribute<DomainEntityAttribute>();
         if(entityAttribute != null)
         {
             entityName = entityAttribute.EntityName;
-            _idiomEntityCache.Add(idiom, entityName);
+            CacheEntityIdiom(idiom, entityName);
             return entityName;
         }
 
         throw new ArgumentException($"The type declaration for '{idiom.Name}' must be decorated with a DomainEntityAttribute.");
+    }
+
+    private static void CacheEntityIdiom(Type idiom, string entityName)
+    {
+        if(_idiomEntityCache.ContainsKey(idiom))
+        {
+            return;
+        }
+
+        bool added = false;
+        int attemptCount = 0;
+        do
+        {
+            added = _idiomEntityCache.TryAdd(idiom, entityName);
+            if(added == false)
+            {
+                Task.Delay((attemptCount * 100)+50);
+            }
+            attemptCount++;
+        } while (added == false && attemptCount < 3);
+    }
+
+    private static string? GetCachedEntityIdiom(Type idiom)
+    {
+        string? entityName;
+        int attemptCount = 0;
+        bool found = _idiomEntityCache.TryGetValue(idiom, out entityName);
+
+        while (found == false && attemptCount < 3)
+        {
+            found = _idiomEntityCache.TryGetValue(idiom, out entityName);
+            if(found == false)
+            {
+                Task.Delay((attemptCount * 50)+50);
+                attemptCount++;
+            }
+        } 
+
+        return entityName;
     }
 
     /// <summary>
