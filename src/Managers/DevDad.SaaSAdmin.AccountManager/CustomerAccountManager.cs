@@ -7,6 +7,7 @@ using DevDad.SaaSAdmin.RulesAccess.Abstractions;
 using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 using DevDad.SaaSAdmin.UserIdentity.Abstractions;
 using Microsoft.Extensions.Logging;
+using ThatDeveloperDad.iFX.DomainUtilities;
 using ThatDeveloperDad.iFX.ServiceModel;
 using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
 
@@ -15,7 +16,7 @@ namespace DevDad.SaaSAdmin.AccountManager
 	public sealed class CustomerAccountManager 
 	: IAccountManager
 	{
-		
+	# region Dependencies
 		private readonly IUserIdentityAccess _userIdentityAccess;
 		private readonly IUserAccountAccess _userAccountAccess;
 
@@ -36,6 +37,7 @@ namespace DevDad.SaaSAdmin.AccountManager
 			}
 			return _builderInstance;
 		}
+	#endregion Dependencies
 		
 		public CustomerAccountManager(ILoggerFactory? loggerFactory,
 			IUserIdentityAccess userIdentityAccess,
@@ -48,7 +50,7 @@ namespace DevDad.SaaSAdmin.AccountManager
 			_catalogAccess = catalogAccess;
 		}
 
-		public async Task<CustomerProfileResponse> LoadOrCreateCustomerProfileAsync(CustomerProfileRequest requestData)
+		public async Task<CustomerProfileResponse> LoadOrCreateCustomerProfileAsync(LoadAccountProfileRequest requestData)
 		{
 			CustomerProfileResponse response = new(requestData);
 
@@ -86,10 +88,53 @@ namespace DevDad.SaaSAdmin.AccountManager
 			return (null, null);
 		}
 
-		public (CustomerProfile?, Exception?) StoreCustomerProfile(CustomerProfile profile)
+		public async Task<CustomerProfileResponse> StoreCustomerProfileAsync(SaveAccountProfileRequest request)
 		{
-			_logger?.LogInformation($"StoreCustomerProfile executed.");
-			return (null, null);
+			CustomerProfileResponse response = new(request);
+
+			CustomerProfile? profile = request.Profile;
+
+			if(profile == null)
+			{
+				response.AddError(new ServiceError{
+					Message = "The Profile to store was null.",
+					Severity = ErrorSeverity.Error,
+					Site = $"{nameof(CustomerAccountManager)}.{nameof(StoreCustomerProfileAsync)}",
+					ErrorKind = "ProfileNullError"
+				});
+				return response;
+			}
+
+			UserAccountResource userAccount = DomainObjectMapper
+				.MapEntities<CustomerProfile, UserAccountResource>(profile);
+
+			var userAccountResponse = await _userAccountAccess.SaveUserAccountAsync(userAccount);
+
+			if(userAccountResponse.Item2 != null)
+			{
+				response.AddError(new ServiceError{
+					Message = userAccountResponse.Item2.Message,
+					Severity = ErrorSeverity.Error,
+					Site = $"{nameof(CustomerAccountManager)}.{nameof(StoreCustomerProfileAsync)}",
+					ErrorKind = "UserAccountSaveError"
+				});
+				response.Payload = request.Payload;
+				return response;
+			}
+
+			var saveResult = userAccountResponse.Item1;
+
+			if(saveResult == null)
+			{
+				throw new Exception("The UserAccountAccess.SaveUserAccountAsync method returned successfully, but had a null result.");
+			}
+
+			CustomerProfile updated = DomainObjectMapper
+				.MapEntities<UserAccountResource, CustomerProfile>(saveResult);
+
+			response.Payload = updated;
+
+			return response;
 		}
 
     }

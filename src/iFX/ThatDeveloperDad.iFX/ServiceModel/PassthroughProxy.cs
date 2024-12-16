@@ -89,6 +89,7 @@ internal class PassthroughProxy<TContract, TService>
     /// <param name="args"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
+    [System.Diagnostics.DebuggerStepThrough]
     protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
     {
         if(targetMethod == null)

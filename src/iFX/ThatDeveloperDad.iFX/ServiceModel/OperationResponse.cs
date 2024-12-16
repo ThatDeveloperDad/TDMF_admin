@@ -8,7 +8,6 @@ public abstract class OperationResponse
 {
     protected  List<ServiceError> _errorsCollection = new();
     public OperationRequest? Request { get; protected set; }
-    
 
     public bool HasWarnings => _errorsCollection.Any(e => e.Severity == ErrorSeverity.Warning);
 
@@ -23,6 +22,8 @@ public abstract class OperationResponse
     {
         _errorsCollection.AddRange(donor._errorsCollection);
     }
+
+    public string?[] ErrorReport => _errorsCollection.Select(e => e.ToString()).ToArray();
 
 //TODO:  Hey Dude!  Pull this change over to the main Framework repo later.
     public bool HasErrorKind(string errorKind)

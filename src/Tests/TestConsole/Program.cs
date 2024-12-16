@@ -41,7 +41,7 @@ namespace TestConsole
 			// Test the LoadCustomerProfile method
 			string myUserId = "a0b66013-a5ef-462f-a812-3eb4aeacff66";
 			string geekDadUserId = "eb4668e2-941a-480b-b132-d9300e9e6124";
-			CustomerProfileRequest request = new CustomerProfileRequest("testing", myUserId);
+			LoadAccountProfileRequest request = new LoadAccountProfileRequest("testLoad", myUserId);
 			var response = mgr.LoadOrCreateCustomerProfileAsync(request).Result;
 			var profile = response.Payload;
 
@@ -58,10 +58,44 @@ namespace TestConsole
 			var geekResponse = mgr.LoadOrCreateCustomerProfileAsync(request).Result;
 			var geekProfile = geekResponse.Payload;
 
-			Console.WriteLine(geekProfile?.UserId);
-			Console.WriteLine(geekProfile?.DisplayName);
-			Console.WriteLine(geekProfile?.Subscription?.SKU);
-			Console.WriteLine(geekProfile?.SubscriptionStatus);
+			if(geekProfile != null)
+			{
+				Console.WriteLine(geekProfile?.UserId);
+				Console.WriteLine(geekProfile?.DisplayName);
+				Console.WriteLine(geekProfile?.Subscription?.SKU);
+				Console.WriteLine(geekProfile?.SubscriptionStatus);
+
+				Console.WriteLine("Now let's change the DisplayName and save it.");
+				geekProfile!.DisplayName = "Geek Dad";
+
+				var saveProfileRequest = new SaveAccountProfileRequest("testSave", geekProfile);
+				var saveResponse = mgr.StoreCustomerProfileAsync(saveProfileRequest).Result;
+
+				if(saveResponse.Successful)
+				{
+					Console.WriteLine("Profile Saved Successfully.");
+					Console.WriteLine(saveResponse.Payload?.DisplayName);
+				}
+				else
+				{
+					Console.WriteLine("Profile Save Failed.");
+					foreach(string? error in saveResponse.ErrorReport)
+					{
+						
+						Console.WriteLine(error);
+					}
+					Console.WriteLine("----------------------------");
+				}
+			}
+			else
+			{
+				Console.WriteLine("Geek Profile was null.  Here are the error messages:");
+				foreach(string? error in geekResponse.ErrorReport)
+				{
+					Console.WriteLine(error);
+				}
+			}
+
 			
 			// Let's see how the Caching helped (or not)
 			DomainObjectMapper.ReportCacheStats();
