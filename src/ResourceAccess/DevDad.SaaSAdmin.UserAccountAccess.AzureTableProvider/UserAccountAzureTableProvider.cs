@@ -59,40 +59,45 @@ public class UserAccountAzureTableProvider
             var tableClient = _tableService
             .GetTableClient(UserEntity.BaseTableName);
 
-        saveStep = "Convert to Entity";
-        var userEntity = userAccount.ToEntity();
+        // This works fine when we're creating or fully replacing an entity.
+        // We may sometimes want to do partial updates instead.
+        // This is going to require MUCH more thought than I'd initially imagined.
+        // Let's leave this alone for the time being.
 
-        if(userEntity == null)
-        {
-            string warningMessage = $"User Account Resource could not be converted to UserEntity.";
-            _logger?.LogError(warningMessage);
-            ServiceError warning = new(){
-                ErrorKind = UserAccountErrors.UserAccountResource_Conversion,
-                Message = warningMessage,
-                Severity = ErrorSeverity.Warning,
-                Site = $"{nameof(UserAccountAzureTableProvider)}.{nameof(SaveUserAccountAsync)}",
-            };
+            saveStep = "Convert to Entity";
+            var userEntity = userAccount.ToEntity();
 
-            return (userAccount, warning);
-        }
+            if(userEntity == null)
+            {
+                string warningMessage = $"User Account Resource could not be converted to UserEntity.";
+                _logger?.LogError(warningMessage);
+                ServiceError warning = new(){
+                    ErrorKind = UserAccountErrors.UserAccountResource_Conversion,
+                    Message = warningMessage,
+                    Severity = ErrorSeverity.Warning,
+                    Site = $"{nameof(UserAccountAzureTableProvider)}.{nameof(SaveUserAccountAsync)}",
+                };
 
-        saveStep = "Save Entity to Table";
-        var userEntityResponse = await tableClient
-            .UpsertEntityAsync(userEntity);
+                return (userAccount, warning);
+            }
 
-        if(userEntityResponse.IsError)
-        {
-            string errorMessage = $"Saving User Account for user id {userAccount.UserId} failed: {userEntityResponse.Status} - {userEntityResponse.ReasonPhrase}";
-            _logger?.LogError(errorMessage);
+            saveStep = "Save Entity to Table";
+            var userEntityResponse = await tableClient
+                .UpsertEntityAsync(userEntity);
 
-            ServiceError error = new(){
-                ErrorKind = UserAccountErrors.UserAccountResource_StorageError,
-                Message = errorMessage,
-                Severity = ErrorSeverity.Error,
-                Site = $"{nameof(UserAccountAzureTableProvider)}.{nameof(SaveUserAccountAsync)}",
-            };
-            return (userAccount, error);
-        }
+            if(userEntityResponse.IsError)
+            {
+                string errorMessage = $"Saving User Account for user id {userAccount.UserId} failed: {userEntityResponse.Status} - {userEntityResponse.ReasonPhrase}";
+                _logger?.LogError(errorMessage);
+
+                ServiceError error = new(){
+                    ErrorKind = UserAccountErrors.UserAccountResource_StorageError,
+                    Message = errorMessage,
+                    Severity = ErrorSeverity.Error,
+                    Site = $"{nameof(UserAccountAzureTableProvider)}.{nameof(SaveUserAccountAsync)}",
+                };
+                return (userAccount, error);
+            }
         }
         catch(Exception ex)
         {
