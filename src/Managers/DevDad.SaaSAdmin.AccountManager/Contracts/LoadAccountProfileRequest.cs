@@ -7,9 +7,9 @@ using ThatDeveloperDad.iFX.ServiceModel;
 
 namespace DevDad.SaaSAdmin.AccountManager.Contracts
 {
-	public class CustomerProfileRequest:OperationRequest<string>
+	public class LoadAccountProfileRequest:OperationRequest<string>
 	{
-        public CustomerProfileRequest(string workloadName, string? payload = null) : base(workloadName, payload)
+        public LoadAccountProfileRequest(string workloadName, string? payload = null) : base(workloadName, payload)
         {
         }
 

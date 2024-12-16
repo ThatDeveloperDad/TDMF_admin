@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace ThatDeveloperDad.iFX.ServiceModel;
 
@@ -11,6 +12,17 @@ public class ServiceError
     public string Message { get; set; } = string.Empty;
 
     public ErrorSeverity Severity { get; set; }
+
+    public override string ToString()
+    {
+        StringBuilder sb = new();
+        sb.AppendLine($"Severity: {Severity}");
+        sb.AppendLine($"ErrorKind: {ErrorKind}");
+        sb.AppendLine($"Site: {Site}");
+        sb.AppendLine($"Message: {Message}");
+
+        return sb.ToString();
+    }
 }
 
 public enum ErrorSeverity
