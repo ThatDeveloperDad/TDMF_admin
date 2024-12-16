@@ -62,8 +62,8 @@ public class DomainObjectMapper
             TSource sourceInstance,
             TDestination? destinationInstance = default
         )
-        where TSource : IDomainIdiom
-        where TDestination : IDomainIdiom
+        where TSource : IdiomaticType
+        where TDestination : IdiomaticType
     {
         if(destinationInstance == null || destinationInstance.Equals(default(TDestination)))
         {
@@ -304,7 +304,7 @@ public class DomainObjectMapper
     }
 
     /// <summary>
-    /// Maps a Filter built against an Idiom of a DomainEntity to
+    /// Maps a Filter built against an IdiomaticType for a DomainEntity to
     /// a filter for the same DomainEntity expressed by a different Idiom.
     /// </summary>
     /// <typeparam name="TSource">The Type of the original Filter</typeparam>
@@ -315,8 +315,8 @@ public class DomainObjectMapper
     /// on the destination filter.
     /// </returns>
     public static Filter<TDestination> MapFilter<TSource, TDestination>(Filter<TSource> currentFilter)
-        where TSource : class, IDomainIdiom
-        where TDestination : class, IDomainIdiom
+        where TSource : IdiomaticType
+        where TDestination : IdiomaticType
     {
         GuardTypesAreEquivalent<TSource, TDestination>();
 

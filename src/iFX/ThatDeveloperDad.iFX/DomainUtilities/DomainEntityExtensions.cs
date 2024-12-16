@@ -10,7 +10,7 @@ namespace ThatDeveloperDad.iFX.DomainUtilities;
 /// Provides Extension Methods that ease the use of Domain Entities
 /// when they are used in Application Components.
 /// </summary>
-public static class DomainEntityExtensions
+internal static class DomainEntityExtensions
 {
     public static string ReadDomainEntityName(this IDomainIdiom instance)
     {
