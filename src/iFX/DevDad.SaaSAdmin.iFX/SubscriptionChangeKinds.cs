@@ -5,21 +5,21 @@ namespace DevDad.SaaSAdmin.iFX;
 public class SubscriptionChangeKinds
 {
 
-    public readonly string[] AllowedValues = 
+    public static string[] AllowedValues = 
     {
-        ActivityKind_Created,
-        ActivityKind_Updated,
-        ActivityKind_Expired,
-        ActivityKind_Cancelled,
-        ActivityKind_Suspended,
-        ActivityKind_Resumed
+        ActivityKind_Create,
+        ActivityKind_Renew,
+        ActivityKind_Expire,
+        ActivityKind_Cancel,
+        ActivityKind_Suspend,
+        ActivityKind_Resume
     };
 
-    public const string ActivityKind_Created = "Created";
-    public const string ActivityKind_Updated = "Renewed";
-    public const string ActivityKind_Expired = "Expired";
-    public const string ActivityKind_Cancelled = "Cancelled";
-    public const string ActivityKind_Suspended = "Suspended";
-    public const string ActivityKind_Resumed = "Resumed";
+    public const string ActivityKind_Create = "Create";
+    public const string ActivityKind_Renew = "Renew";
+    public const string ActivityKind_Expire = "Expire";
+    public const string ActivityKind_Cancel = "Cancel";
+    public const string ActivityKind_Suspend = "Suspend";
+    public const string ActivityKind_Resume = "Resume";
 
 }

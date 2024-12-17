@@ -10,6 +10,6 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 
         Task<CustomerProfileResponse> StoreCustomerProfileAsync(SaveAccountProfileRequest request);
 
-        (CustomerSubscription?, Exception?) ManageCustomerSubscription(SubscriptionActionRequest actionRequest);
+        Task<ManageSubscriptionResponse> ManageCustomerSubscriptionAsync(ManageSubscriptionRequest actionRequest);
     }
 }

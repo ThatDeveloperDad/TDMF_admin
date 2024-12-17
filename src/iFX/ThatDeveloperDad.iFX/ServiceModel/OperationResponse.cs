@@ -22,6 +22,11 @@ public abstract class OperationResponse
     {
         _errorsCollection.AddRange(donor._errorsCollection);
     }
+//TODO:  Port to system-framework repo
+    public void AddErrors(IEnumerable<ServiceError> errors)
+    {
+        _errorsCollection.AddRange(errors);
+    }
 
     public string?[] ErrorReport => _errorsCollection.Select(e => e.ToString()).ToArray();
 

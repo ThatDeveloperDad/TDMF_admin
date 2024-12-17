@@ -8,6 +8,7 @@ namespace DevDad.SaaSAdmin.iFX;
 /// </summary>
 public class EntraGroups
 {
+    public const string AppGroupPrefix = "app-gmtools-";
     public readonly string[] ValidGroups = [FreeUsers,PaidUsers];
 
     public const string FreeUsers = "app-gmtools-users";

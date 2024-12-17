@@ -6,17 +6,24 @@ using System.Threading.Tasks;
 
 namespace DevDad.SaaSAdmin.AccountManager.Contracts
 {
-	public class SubscriptionActionRequest
+	public class SubscriptionActionDetail
 	{
 
-		public SubscriptionActionRequest()
+		public SubscriptionActionDetail()
 		{
+			CustomerProfileId = string.Empty;
 			ActivityName = string.Empty;
 			RequestSource = string.Empty;
 			CustomerId = string.Empty;
 			CustomerIdSource = string.Empty;
 			SubscriptionSku = string.Empty;
 		}
+
+		/// <summary>
+		/// Identifies the Customer's Profile using THIS SYSTEM's CustomerIdentifier.
+		/// </summary>
+		public string CustomerProfileId { get; set; }
+
 
 		/// <summary>
 		/// Identifies what activity we need to perform on the customer's subscription.

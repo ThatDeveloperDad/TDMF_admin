@@ -231,7 +231,7 @@ internal class CustomerBuilder
             subscription.History.Add(
                 new SubscriptionActivity(){
                     ActivityDateUTC = DateTime.UtcNow,
-                    ActivityKind = SubscriptionChangeKinds.ActivityKind_Created
+                    ActivityKind = SubscriptionChangeKinds.ActivityKind_Create
                 }
             );
 
