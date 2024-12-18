@@ -69,7 +69,7 @@ public class EntraAccessTests
         ReconcileMembershipsRequest request = new("explorationTesting", requestData);
         ReconcileMembershipsResponse response = _entraProvider.ReconcileUserMembershipsAsync(request).Result;
         
-        if(response.Payload == false)
+        if(response.Payload?.Completed == false)
         {
             _logger?.LogError("ReconcileMemberships failed for User: {userId}", userId);
             foreach(var error in response.ErrorReport)

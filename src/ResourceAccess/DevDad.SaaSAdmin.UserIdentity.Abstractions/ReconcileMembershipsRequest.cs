@@ -11,5 +11,9 @@ public class ReconcileMembershipsRequest : OperationRequest<ReconcileMemberships
     {
     }
 
+    public ReconcileMembershipsRequest(OperationRequest parent, ReconcileMembershipsData? payload = null) : base(parent, payload)
+    {
+    }
+
     public override string OperationName => _operationName;
 }

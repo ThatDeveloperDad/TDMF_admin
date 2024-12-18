@@ -36,7 +36,7 @@ namespace DevDad.SaaSAdmin.AccountManager
 				{
 					throw new Exception("The UserAccountAccess and UserIdentityAccess dependencies have not been properly initialized.");
 				}
-				_builderInstance = new CustomerBuilder(_userAccountAccess, _userIdentityAccess, _catalogAccess);
+				_builderInstance = new CustomerBuilder(_userAccountAccess, _userIdentityAccess, _catalogAccess, _logger);
 			}
 			return _builderInstance;
 		}
@@ -87,7 +87,7 @@ namespace DevDad.SaaSAdmin.AccountManager
 
 		public async Task<ManageSubscriptionResponse> ManageCustomerSubscriptionAsync(ManageSubscriptionRequest actionRequest)
 		{
-			ManageSubscriptionResponse response = new(actionRequest, null);
+			ManageSubscriptionResponse thisResponse = new(actionRequest, null);
 
 			// When a SubsriptionActionRequest arrives, we'll generally follow the same basic steps:
 			if(actionRequest == null)
@@ -99,9 +99,9 @@ namespace DevDad.SaaSAdmin.AccountManager
 					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
 					ErrorKind = "NullRequestPayload"
 				};
-				response.AddError(nullRequestPayload);
-				response.Payload = false;
-				return response;
+				thisResponse.AddError(nullRequestPayload);
+				thisResponse.Payload = false;
+				return thisResponse;
 			}
 			
 			var requestErrors = TryGetChangeDetail(actionRequest, out SubscriptionActionDetail? actionDetail);
@@ -109,9 +109,9 @@ namespace DevDad.SaaSAdmin.AccountManager
 			// now, we can interrogate the requestErrors and run a null-check on the details.
 			if(requestErrors.Any())
 			{
-				response.AddErrors(requestErrors);
-				response.Payload = false;
-				return response;
+				thisResponse.AddErrors(requestErrors);
+				thisResponse.Payload = false;
+				return thisResponse;
 			}
 
 			if(actionDetail == null)
@@ -123,9 +123,9 @@ namespace DevDad.SaaSAdmin.AccountManager
 					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
 					ErrorKind = "NullRequestPayload"
 				};
-				response.AddError(nullRequestPayload);
-				response.Payload = false;
-				return response;
+				thisResponse.AddError(nullRequestPayload);
+				thisResponse.Payload = false;
+				return thisResponse;
 			}
 			
 			//  1 & 2 are the same for every request.  Do Those Here.
@@ -135,9 +135,9 @@ namespace DevDad.SaaSAdmin.AccountManager
 
 			if(builderResponse.HasErrors)
 			{
-				response.AddErrors(builderResponse);
-				response.Payload = false;
-				return response;
+				thisResponse.AddErrors(builderResponse);
+				thisResponse.Payload = false;
+				return thisResponse;
 			}
 
 			CustomerProfile? customerProfile = builderResponse.Payload;
@@ -152,9 +152,9 @@ namespace DevDad.SaaSAdmin.AccountManager
 					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
 					ErrorKind = "ProfileNotFound"
 				};
-				response.AddError(profileNotFound);
-				response.Payload = false;
-				return response;
+				thisResponse.AddError(profileNotFound);
+				thisResponse.Payload = false;
+				return thisResponse;
 			}
 
 			string? userIdentityId = customerProfile.GetUserIdForVendor(_userIdentityAccess.IdentityVendor);
@@ -168,9 +168,9 @@ namespace DevDad.SaaSAdmin.AccountManager
 					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
 					ErrorKind = "NoUserIdentityId"
 				};
-				response.AddError(noUserIdentityId);
-				response.Payload = false;
-				return response;
+				thisResponse.AddError(noUserIdentityId);
+				thisResponse.Payload = false;
+				return thisResponse;
 			}
 
 			// 2:  Load the Catalog Item that gives us the details for the Subscription SKU
@@ -187,14 +187,45 @@ namespace DevDad.SaaSAdmin.AccountManager
 					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
 					ErrorKind = "SkuNotFound"
 				};
-				response.AddError(skuNotFound);
-				return response;
+				thisResponse.AddError(skuNotFound);
+				return thisResponse;
 			}
 
 			//  3 & 4 are going to be different for each Activity.  We'll use a Strategy Pattern for those.
 			// 3:  Make sure the Activity is applicable to the current Subscription Status
 			// 4:  Perform the Activity
+			ModifySubscriptionData changeSubData = new(customerProfile, actionDetail);
+			ModifySubscriptionRequest changeSubscriptionRequest = new(actionRequest, changeSubData);
+			var changeSubscriptionResponse = await AccountBuilder().PerformSubscriptionActivity(changeSubscriptionRequest);
 			
+			if(changeSubscriptionResponse.HasErrors)
+			{
+				thisResponse.AddErrors(changeSubscriptionResponse);
+				thisResponse.Payload = false;
+				return thisResponse;
+			}
+
+			if(changeSubscriptionResponse.HasWarnings)
+			{
+				thisResponse.AddErrors(changeSubscriptionResponse);
+			}
+
+			if(changeSubscriptionResponse.Payload == null)
+			{
+				ServiceError noChangeResult = new()
+				{
+					Message = "The Change Subscription Activity did not return a result.",
+					Severity = ErrorSeverity.Error,
+					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
+					ErrorKind = "NoChangeResult"
+				};
+				thisResponse.AddError(noChangeResult);
+				thisResponse.Payload = false;
+				return thisResponse;
+			}
+
+			customerProfile = changeSubscriptionResponse.Payload;
+
 			//  5, 6, and 7 are the same for every request.  Do Those Here.
 			// 5:  Save the modified account back to local storage.
 			UserAccountResource accountResource = DomainObjectMapper
@@ -202,13 +233,13 @@ namespace DevDad.SaaSAdmin.AccountManager
 			var saveResult = await _userAccountAccess.SaveUserAccountAsync(accountResource);
 			if(saveResult.Item2 != null)
 			{
-				response.AddError(new ServiceError{
+				thisResponse.AddError(new ServiceError{
 					Message = saveResult.Item2.Message,
 					Severity = ErrorSeverity.Error,
 					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
 					ErrorKind = "UserAccountSaveError"
 				});
-				return response;
+				return thisResponse;
 			}
 
 			// 6:  Reconcile the Authorization Groups that the customer SHOULD have membership in at the Identity Service.
@@ -220,31 +251,31 @@ namespace DevDad.SaaSAdmin.AccountManager
 			};
 			
 			var reconcileGroupsRequest = new ReconcileMembershipsRequest
-				(actionRequest.WorkloadName,
+				(actionRequest,
 				 reconcileData);
 
-			var reconcileResult = await _userIdentityAccess.ReconcileUserMembershipsAsync(reconcileGroupsRequest);
-			if(reconcileResult.HasErrors)
+			var reconcileResponse = await _userIdentityAccess.ReconcileUserMembershipsAsync(reconcileGroupsRequest);
+			if(reconcileResponse.HasErrors)
 			{
-				response.AddErrors(reconcileResult);
-				response.Payload = false;
+				thisResponse.AddErrors(reconcileResponse);
+				thisResponse.Payload = false;
 			}
 
-			string reconcileLog = $"Reconciled User Memberships for {userIdentityId} in {actionRequest.WorkloadName}: Added {reconcileResult.MembershipsAdded}, Removed {reconcileResult.MembershipsRemoved}";
+			string reconcileLog = $"Reconciled User Memberships for {userIdentityId} in {actionRequest.WorkloadName}: Added {reconcileResponse.MembershipsAdded}, Removed {reconcileResponse.MembershipsRemoved}";
 			_logger?.LogInformation(reconcileLog);
 
 			// 7:  Handle the result of all this stuff.
-			if(response.HasErrors)
+			if(thisResponse.HasErrors)
 			{
-				response.Payload = false;
+				thisResponse.Payload = false;
 				// Need a way to send an alert to a Human here.
 			}
 			else
 			{
-				response.Payload = true;
+				thisResponse.Payload = true;
 			}
 
-			return response;
+			return thisResponse;
 		}
 
 		public async Task<CustomerProfileResponse> StoreCustomerProfileAsync(SaveAccountProfileRequest request)

@@ -13,7 +13,7 @@ public class ReconcileMembershipsResponse : OperationResponse<ReconcileMembershi
     {
         get
         {
-            return Payload?.Succeeded ?? false;
+            return Payload?.Completed ?? false;
         }
         set
         {
@@ -21,7 +21,7 @@ public class ReconcileMembershipsResponse : OperationResponse<ReconcileMembershi
             {
                 Payload = new ReconcileMembershipResult();
             }
-            Payload.Succeeded = value;
+            Payload.Completed = value;
         }
     }
     public int MembershipsAdded

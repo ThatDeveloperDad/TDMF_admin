@@ -2,10 +2,12 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DevDad.SaaSAdmin.AccountManager.Contracts;
+using DevDad.SaaSAdmin.AccountManager.Internals.SubscriptionStrategies;
 using DevDad.SaaSAdmin.Catalog.Abstractions;
 using DevDad.SaaSAdmin.iFX;
 using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 using DevDad.SaaSAdmin.UserIdentity.Abstractions;
+using Microsoft.Extensions.Logging;
 using ThatDeveloperDad.iFX.CollectionUtilities;
 using ThatDeveloperDad.iFX.CollectionUtilities.Operators;
 using ThatDeveloperDad.iFX.DomainUtilities;
@@ -19,20 +21,24 @@ internal class CustomerBuilder
     private readonly IUserAccountAccess _accountAccess; 
     private readonly ICatalogAccess _catalogAccess;
 
+    private readonly ChangeStrategyFactory _changeStrategyFactory;
+
     public CustomerBuilder(
         IUserAccountAccess accountAccess,
         IUserIdentityAccess identityAccess,
-        ICatalogAccess catalogAccess)
+        ICatalogAccess catalogAccess,
+        ILogger? logger = null)
     {
         _accountAccess = accountAccess;
         _identityAccess = identityAccess;
         _catalogAccess = catalogAccess;
+        _changeStrategyFactory = new(logger);
     }
 
-    public async Task<CustomerProfileResponse> LoadOrBuildCustomer(BuildProfileRequest requestData)
+    public async Task<CustomerProfileResponse> LoadOrBuildCustomer(BuildProfileRequest request)
     {
         //First step is to try and load the identity information for the userId in the requestData.
-        CustomerProfileResponse response = await FetchAndApplyIdentity(requestData);
+        CustomerProfileResponse response = await FetchAndApplyIdentity(request);
         if(response.HasErrors == true)
         {
             return response;
@@ -66,6 +72,82 @@ internal class CustomerBuilder
         return response;
     }
 
+    public async Task<CustomerProfileResponse> PerformSubscriptionActivity(ModifySubscriptionRequest request)
+    {
+        CustomerProfileResponse response = new(request, request?.Payload?.CustomerProfile?? new CustomerProfile());
+
+        if(request == null || request.Payload == null)
+        {
+            response.AddError(new ServiceError
+            {
+                Message = "PerformSubscriptionActivity requires a ModifySubscriptionRequest with a ModifySubscriptionData payload.",
+                Severity = ErrorSeverity.Error,
+                Site = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionActivity)}",
+                ErrorKind = ServiceErrorKinds.RequestValidation
+            });
+            return response;
+        }
+
+        // Prepare working variables.
+        string currentStep = "PrepareWorkingVariables";
+        CustomerProfile profileToUpdate = request.Payload.CustomerProfile;
+        SubscriptionActionDetail actionDetail = request.Payload.ChangeDetail;
+        CustomerSubscription? subscriptionToUpdate = profileToUpdate.Subscription;
+
+        if(subscriptionToUpdate == null)
+        {
+            response.AddError(new ServiceError
+            {
+                Message = "PerformSubscriptionActivity requires a CustomerProfile with a Subscription.",
+                Severity = ErrorSeverity.Error,
+                Site = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionActivity)}",
+                ErrorKind = $"{ServiceErrorKinds.RequestPayloadValidation}:CustomerSubscriptionWasNull"
+            });
+
+            return response;
+        }
+
+        currentStep = "LoadSubscriptionTemplate";
+        SubscriptionTemplateResource? subscriptionTemplate = await _catalogAccess.GetCatalogItemAsync(actionDetail.SubscriptionSku);
+        if(subscriptionTemplate == null)    
+        {
+            response.AddError(new ServiceError
+            {
+                Message = $"Could not locate a Subscription Template with SKU {actionDetail.SubscriptionSku}.",
+                Severity = ErrorSeverity.Error,
+                Site = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionActivity)}",
+                ErrorKind = $"{ServiceErrorKinds.StepFailed}{currentStep}"
+            });
+
+            return response;
+        }
+
+        currentStep = "ApplySubscriptionActivity";
+        var changeStrategy = _changeStrategyFactory.GetChangeStrategy(actionDetail.ActivityName);
+
+        if(changeStrategy == null)
+        {
+            response.AddError(new ServiceError
+            {
+                Message = $"Could not locate a Strategy implementation for Activity {actionDetail.ActivityName}.  No Changes Made.",
+                Severity = ErrorSeverity.Error,
+                Site = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionActivity)}",
+                ErrorKind = $"{ServiceErrorKinds.StepFailed}{currentStep}"
+            });
+            response.Payload = profileToUpdate;
+            return response;
+        }
+
+        CustomerSubscription updatedSubscription = changeStrategy.ApplyChange(
+            subscriptionToUpdate, 
+            actionDetail, 
+            subscriptionTemplate);
+
+        return response;
+    }
+
+
+#region Private LoadOrBuildCustomer Methods
     private async Task<CustomerProfileResponse> FetchAndApplyIdentity(BuildProfileRequest requestData)
     {
         CustomerProfileResponse response = new(requestData);
@@ -270,5 +352,6 @@ internal class CustomerBuilder
         response.Payload = profile;
         return response;
     }
+#endregion // Private LoadOrBuildCustomer Methods
 
 }

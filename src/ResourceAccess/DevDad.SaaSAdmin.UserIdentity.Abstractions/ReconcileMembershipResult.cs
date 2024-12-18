@@ -4,7 +4,7 @@ namespace DevDad.SaaSAdmin.UserIdentity.Abstractions;
 
 public class ReconcileMembershipResult
 {
-    public bool Succeeded { get; set; }
+    public bool Completed { get; set; }
 
     public int? MembershipsAdded { get; set; }
 
