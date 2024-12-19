@@ -196,7 +196,7 @@ namespace DevDad.SaaSAdmin.AccountManager
 			// 4:  Perform the Activity
 			ModifySubscriptionData changeSubData = new(customerProfile, actionDetail);
 			ModifySubscriptionRequest changeSubscriptionRequest = new(actionRequest, changeSubData);
-			var changeSubscriptionResponse = await AccountBuilder().PerformSubscriptionActivity(changeSubscriptionRequest);
+			var changeSubscriptionResponse = await AccountBuilder().PerformSubscriptionAction(changeSubscriptionRequest);
 			
 			if(changeSubscriptionResponse.HasErrors)
 			{
@@ -382,11 +382,11 @@ namespace DevDad.SaaSAdmin.AccountManager
 			}
 
 			// The Activity must be both present and well-known.
-			if(SubscriptionChangeKinds.AllowedValues.Contains(actionDetail.ActivityName) == false)
+			if(SubscriptionChangeKinds.AllowedValues.Contains(actionDetail.ActionName) == false)
 			{
 				ServiceError unknownActivity = new()
 				{
-					Message = $"{actionDetail.ActivityName} is not a known Subscription Activity.",
+					Message = $"{actionDetail.ActionName} is not a known Subscription Activity.",
 					Severity = ErrorSeverity.Error,
 					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
 					ErrorKind = "UnknownActivity"

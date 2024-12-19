@@ -8,10 +8,7 @@ internal abstract class ChangeStrategyBase
 {
     public abstract string ActivityKind { get; }
     
-    public abstract CustomerSubscription ApplyChange(
-        CustomerSubscription subscriptionToUpdate, 
-        SubscriptionActionDetail actionDetail, 
-        SubscriptionTemplateResource subscriptionTemplate);
+    public abstract ChangeStrategyResponse ApplyChange(ChangeStrategyRequest request);
 
     // Each implementation of this method will:
     // 1. Validate the current subscription state against the requested Action.

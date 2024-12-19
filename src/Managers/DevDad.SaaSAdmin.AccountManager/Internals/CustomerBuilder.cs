@@ -72,20 +72,21 @@ internal class CustomerBuilder
         return response;
     }
 
-    public async Task<CustomerProfileResponse> PerformSubscriptionActivity(ModifySubscriptionRequest request)
+    public async Task<CustomerProfileResponse> PerformSubscriptionAction(ModifySubscriptionRequest request)
     {
-        CustomerProfileResponse response = new(request, request?.Payload?.CustomerProfile?? new CustomerProfile());
+        string thisErrorSite = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionAction)}";
+        CustomerProfileResponse thisResponse = new(request, request?.Payload?.CustomerProfile?? new CustomerProfile());
 
         if(request == null || request.Payload == null)
         {
-            response.AddError(new ServiceError
+            thisResponse.AddError(new ServiceError
             {
                 Message = "PerformSubscriptionActivity requires a ModifySubscriptionRequest with a ModifySubscriptionData payload.",
                 Severity = ErrorSeverity.Error,
-                Site = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionActivity)}",
+                Site = thisErrorSite,
                 ErrorKind = ServiceErrorKinds.RequestValidation
             });
-            return response;
+            return thisResponse;
         }
 
         // Prepare working variables.
@@ -94,56 +95,77 @@ internal class CustomerBuilder
         SubscriptionActionDetail actionDetail = request.Payload.ChangeDetail;
         CustomerSubscription? subscriptionToUpdate = profileToUpdate.Subscription;
 
-        if(subscriptionToUpdate == null)
-        {
-            response.AddError(new ServiceError
-            {
-                Message = "PerformSubscriptionActivity requires a CustomerProfile with a Subscription.",
-                Severity = ErrorSeverity.Error,
-                Site = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionActivity)}",
-                ErrorKind = $"{ServiceErrorKinds.RequestPayloadValidation}:CustomerSubscriptionWasNull"
-            });
-
-            return response;
-        }
-
-        currentStep = "LoadSubscriptionTemplate";
         SubscriptionTemplateResource? subscriptionTemplate = await _catalogAccess.GetCatalogItemAsync(actionDetail.SubscriptionSku);
         if(subscriptionTemplate == null)    
         {
-            response.AddError(new ServiceError
+            thisResponse.AddError(new ServiceError
             {
                 Message = $"Could not locate a Subscription Template with SKU {actionDetail.SubscriptionSku}.",
                 Severity = ErrorSeverity.Error,
-                Site = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionActivity)}",
+                Site = thisErrorSite,
                 ErrorKind = $"{ServiceErrorKinds.StepFailed}{currentStep}"
             });
 
-            return response;
+            return thisResponse;
         }
 
-        currentStep = "ApplySubscriptionActivity";
-        var changeStrategy = _changeStrategyFactory.GetChangeStrategy(actionDetail.ActivityName);
+        currentStep = "ApplySubscriptionChange";
+        var changeStrategy = _changeStrategyFactory.GetChangeStrategy(actionDetail.ActionName);
 
         if(changeStrategy == null)
         {
-            response.AddError(new ServiceError
+            thisResponse.AddError(new ServiceError
             {
-                Message = $"Could not locate a Strategy implementation for Activity {actionDetail.ActivityName}.  No Changes Made.",
+                Message = $"Could not locate a Strategy implementation for Activity {actionDetail.ActionName}.  No Changes Made.",
                 Severity = ErrorSeverity.Error,
-                Site = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionActivity)}",
+                Site = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionAction)}",
                 ErrorKind = $"{ServiceErrorKinds.StepFailed}{currentStep}"
             });
-            response.Payload = profileToUpdate;
-            return response;
+            thisResponse.Payload = profileToUpdate;
+            return thisResponse;
         }
 
-        CustomerSubscription updatedSubscription = changeStrategy.ApplyChange(
-            subscriptionToUpdate, 
-            actionDetail, 
-            subscriptionTemplate);
+        ChangeStrategyRequest changeRequest = new
+            (
+                request, 
+                subscriptionToUpdate, 
+                actionDetail, 
+                subscriptionTemplate
+            );
 
-        return response;
+        ChangeStrategyResponse changeResponse = changeStrategy.ApplyChange(changeRequest);
+
+        if(changeResponse.Successful == false)
+        {
+            thisResponse.AddErrors(changeResponse, thisErrorSite);
+            return thisResponse;
+        }
+
+        if(changeResponse.ChangeCompleted == false)
+        {
+            thisResponse.AddError(new ServiceError
+            {
+                Message = $"The Subscription Activity {actionDetail.ActionName} did not complete successfully.",
+                Severity = ErrorSeverity.Error,
+                Site = thisErrorSite,
+                ErrorKind = $"{ServiceErrorKinds.StepFailed}{currentStep}"
+            });
+            thisResponse.Payload = profileToUpdate;
+            return thisResponse;
+        }
+
+        // If the change completed, we need to:  
+        // Set the UserId on the responsePayload.
+        CustomerSubscription updatedSubscription = changeResponse.Payload!;
+        // Record the change in SubscriptionHistory.  (Really ought to archive "old" subscriptions as thety're replaced. )
+
+
+
+        // set the profileToUpdate.Subscirption to the changeResponse.Payload value.
+        profileToUpdate.Subscription = updatedSubscription;
+        thisResponse.Payload = profileToUpdate;
+
+        return thisResponse;
     }
 
 

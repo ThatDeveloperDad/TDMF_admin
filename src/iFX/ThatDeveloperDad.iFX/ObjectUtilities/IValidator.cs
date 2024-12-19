@@ -7,7 +7,7 @@ namespace ThatDeveloperDad.iFX.ObjectUtilities;
 
 public interface IValidator<T>
 {
-        IEnumerable<ServiceError> Validate(T instance);
+        IEnumerable<ServiceError> Validate(T? instance);
 
         /// <summary>
         /// Allows for workload or step-specific validation.
@@ -16,8 +16,11 @@ public interface IValidator<T>
         /// Override this to handle different usage scenarios.
         /// </summary>
         /// <param name="instance"></param>
-        /// <param name="workloadName"></param>
+        /// <param name="activityContext"></param>
         /// <returns></returns>
-        IEnumerable<ServiceError> Validate(T instance, string workloadName)
+        IEnumerable<ServiceError> Validate(T? instance, string activityContext)
+                => Validate(instance);
+
+        IEnumerable<ServiceError> Validate(T? instance, Func<T?, IEnumerable<ServiceError>> contextualDelegate)
                 => Validate(instance);
 }

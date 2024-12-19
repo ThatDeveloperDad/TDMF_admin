@@ -12,10 +12,10 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 		public SubscriptionActionDetail()
 		{
 			CustomerProfileId = string.Empty;
-			ActivityName = string.Empty;
+			ActionName = string.Empty;
 			RequestSource = string.Empty;
-			CustomerId = string.Empty;
-			CustomerIdSource = string.Empty;
+			VendorSuppliedCustomerId = string.Empty;
+			VendorName = string.Empty;
 			SubscriptionSku = string.Empty;
 		}
 
@@ -28,7 +28,7 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 		/// <summary>
 		/// Identifies what activity we need to perform on the customer's subscription.
 		/// </summary>
-		public string ActivityName { get; set; }
+		public string ActionName { get; set; }
 
 		/// <summary>
 		/// The name of the system from which the Activity originated.
@@ -36,17 +36,18 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 		public string RequestSource { get; set; }
 
 		/// <summary>
-		/// The identifier for the customer whose subscription we are altering.
+		/// The identifier for the customer (at the request source) 
+		/// whose subscription we are altering.
 		/// </summary>
-		public string CustomerId { get; set; }
+		public string VendorSuppliedCustomerId { get; set; }
 
 		/// <summary>
 		/// The vendor who "owns" the provided CustomerId.
 		/// </summary>
-		public string CustomerIdSource { get; set; }
+		public string VendorName { get; set; }
 
 		/// <summary>
-		/// Identifies which subscription the request is for.
+		/// Identifies which subscription template should be used for the change.
 		/// </summary>
 		public string SubscriptionSku { get; set; }
 	}

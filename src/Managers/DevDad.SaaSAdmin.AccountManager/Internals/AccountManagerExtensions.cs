@@ -25,7 +25,7 @@ internal static class AccountManagerExtensions
         model.SKU = template.SKU;
         model.StartDateUtc = now;
         model.EndDateUtc = now.AddDays(template.RenewalPeriod);
-        model.WillRenew = false;
+        model.WillRenew = template.RenewalPeriod != SubscriptionRenewalFrequencies.Permanent;
         model.CurrentStatus = template.DefaultStatus;
         model.Quotas.AiGeneratedNpcs.Budget = aiGrant?.InitialBudget??0;
         model.Quotas.StoredNpcs.Budget = storageGrant?.InitialBudget??0;

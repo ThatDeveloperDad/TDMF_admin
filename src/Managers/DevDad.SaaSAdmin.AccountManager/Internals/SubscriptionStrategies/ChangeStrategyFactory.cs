@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DevDad.SaaSAdmin.iFX;
 using Microsoft.Extensions.Logging;
 
@@ -15,8 +16,22 @@ internal class ChangeStrategyFactory
         _changeStrategies.Add(SubscriptionChangeKinds.ActivityKind_Create, new CreateSubscriptionStrategy());;
     }
 
+    /// <summary>
+    /// Validates that the requested activity is a known activty, and returns the strategy
+    /// for it, if it exists.
+    /// </summary>
+    /// <param name="activityKind"></param>
+    /// <returns></returns>
     public ChangeStrategyBase? GetChangeStrategy(string activityKind)
     {
+
+        if(SubscriptionChangeKinds.AllowedValues.Contains(activityKind) == false)
+        {
+            string logMessage = $"The requested Subscription Action {activityKind} is not valid.";
+            _logger?.LogError(logMessage);
+            return null;
+        }
+
         if(_changeStrategies.TryGetValue(activityKind, out ChangeStrategyBase? strategy) == true)
         {
             return strategy;

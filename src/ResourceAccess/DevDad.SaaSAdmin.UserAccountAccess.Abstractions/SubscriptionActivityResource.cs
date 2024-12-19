@@ -16,4 +16,7 @@ public class SubscriptionActivityResource:IdiomaticType
 
         [EntityAttribute(Entities.SubscriptionHistoryEntry.Attributes.ActivityDateUtc)]
         public DateTime ActivityDateUTC { get; set; } = DateTime.UtcNow;
+
+        [EntityAttribute(Entities.SubscriptionHistoryEntry.Attributes.Comment)]
+        public string Comment { get; set; } - string.Empty;
 }
