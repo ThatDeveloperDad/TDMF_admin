@@ -1,4 +1,5 @@
 using System;
+using System.Reflection.Metadata;
 
 namespace DevDad.SaaSAdmin.iFX;
 
@@ -126,9 +127,21 @@ public class SubscriptionStateTransitions
     /// <param name="subscriptionStatus"></param>
     /// <param name="actionName"></param>
     /// <returns></returns>
-    public static bool CanPerformActivityForStatus(string subscriptionStatus, string actionName)
+    public static bool CanPerformActivityForStatus(string actionName, string subscriptionStatus)
     {
         bool activityIsValid = ValidStatusActions[subscriptionStatus].Contains(actionName);
+        
+        var statusHasActions = ValidStatusActions.TryGetValue(subscriptionStatus, out string[]? validActions);
+        if(statusHasActions == false)
+        {
+            return false;
+        }
+
+        if(validActions?.Contains(actionName) == false)
+        {
+            return false;
+        }
+
         return activityIsValid;
     }
 }

@@ -55,6 +55,7 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
         newSubscription.History.Add(activityLogItem);
         
         response.Payload = newSubscription;
+        response.ChangeCompleted = true;
         return response;
     }
 
@@ -70,6 +71,7 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
         List<ServiceError> errors = new();
         
         var requestErrors = new ChangeRequestValidator().Validate(request);
+        errors.AddRange(requestErrors);
         if(requestErrors.Any(e=> e.Severity == ErrorSeverity.Error))
         {
             return errors;
@@ -85,7 +87,7 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
 
         // Make sure the requested ChangeDetail is well formed.
         var changeDetailErrors = new SubscriptionActionValidator().Validate
-            (request.ChangeDetails);
+            (_changeDetail);
         errors.AddRange(changeDetailErrors);
 
         // Make sure the existing subscription data is appropriate for the Create action.
@@ -123,6 +125,8 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
         string activityKind = _changeDetail?.ActionName!;
         string currentStatus = subscriptionToUpdate.CurrentStatus;
         bool currentSubIsFreeTier = subscriptionToUpdate.SKU == SubscriptionIdentifiers.SKUS_TDMF_FREE;
+        string requestedNewSku = _changeDetail!.SubscriptionSku;
+        
         // if the currentSub is a FreeTier, let's set the currentStatus to string.Empty;
         // Within the CreateSubscription context, we can treat a Free Sub the same as No Sub.
         if(currentSubIsFreeTier)
@@ -130,16 +134,43 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
             currentStatus = string.Empty;
         }
 
-        // Validate that the requested Activity is appropriate for the currentStatus.
-        // The ValidActivities / Status are defined in the SubscriptionStateTransitions
-        // helper class, in DevDad.SaaSAdmin.iFX
-        if(SubscriptionStateTransitions
-            .ValidStatusActions[currentStatus]
-            .Contains(activityKind) == false)
+        //Cannot add a new subscription of the same sku to an existing subscription.
+        // If currentStatus is Cancelled, we're effectively replacing it with a new sub.
+        if(_subscriptionToUpdate!.SKU == requestedNewSku
+          && currentStatus != SubscriptionStatuses.Cancelled)
         {
             errors.Add(new ServiceError
             {
-                Message = $"The requested activity '{activityKind}' is not valid for the current subscription status '{currentStatus}'.",
+                Message = AccountManagerConstants.ModifySubscriptionErrors.Validation_AddNewSameSku,
+                Severity = ErrorSeverity.Error,
+                ErrorKind = ServiceErrorKinds.RequestPayloadValidation
+            });
+        }
+
+        // Cannot Add a Free Subscirption to an active Paid Subscription.
+        if(currentSubIsFreeTier == false
+          && currentStatus == SubscriptionStatuses.Active
+          && requestedNewSku == SubscriptionIdentifiers.SKUS_TDMF_FREE)
+        {
+            errors.Add(new ServiceError
+            {
+                Message = AccountManagerConstants.ModifySubscriptionErrors.Validation_AddFreeToActivePaid,
+                Severity = ErrorSeverity.Error,
+                ErrorKind = ServiceErrorKinds.RequestPayloadValidation
+            });
+        }
+
+        // Validate that the requested Activity is appropriate for the currentStatus.
+        // The ValidActivities / Status are defined in the SubscriptionStateTransitions
+        // helper class, in DevDad.SaaSAdmin.iFX
+        bool actionIsValidForStatus = 
+            SubscriptionStateTransitions.CanPerformActivityForStatus(activityKind, currentStatus);
+        
+        if(actionIsValidForStatus == false)
+        {
+            errors.Add(new ServiceError
+            {
+                Message = AccountManagerConstants.ModifySubscriptionErrors.Validation_ActivityNotValidForStatus,
                 Severity = ErrorSeverity.Error,
                 ErrorKind = ServiceErrorKinds.RequestPayloadValidation
             });
@@ -147,5 +178,5 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
 
         return errors;
     }
-
+    
 }

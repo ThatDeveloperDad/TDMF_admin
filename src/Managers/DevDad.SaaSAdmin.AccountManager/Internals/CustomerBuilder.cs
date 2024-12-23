@@ -154,15 +154,7 @@ internal class CustomerBuilder
             return thisResponse;
         }
 
-        // If the change completed, we need to:  
-        // Set the UserId on the responsePayload.
-        CustomerSubscription updatedSubscription = changeResponse.Payload!;
-        // Record the change in SubscriptionHistory.  (Really ought to archive "old" subscriptions as thety're replaced. )
-
-
-
-        // set the profileToUpdate.Subscirption to the changeResponse.Payload value.
-        profileToUpdate.Subscription = updatedSubscription;
+        profileToUpdate.Subscription = changeResponse.Payload!;
         thisResponse.Payload = profileToUpdate;
 
         return thisResponse;
@@ -190,7 +182,13 @@ internal class CustomerBuilder
         if(loadIdentityResponse.Successful)
         {
             profile = DomainObjectMapper.MapEntities<UserIdentityResource, CustomerProfile>(
-                loadIdentityResponse.Payload!);   
+                loadIdentityResponse.Payload!); 
+            ExternalId idFromIdentityService = new()
+            {
+                Vendor = _identityAccess.IdentityVendor,
+                IdAtVendor = loadIdentityResponse.Payload?.UserId??requestData.UserId
+            };
+            profile.ExternalIds.Add(idFromIdentityService);
             response.Payload = profile;
             return response;
         }

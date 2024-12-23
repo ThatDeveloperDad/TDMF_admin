@@ -8,7 +8,7 @@ namespace DevDad.SaaSAdmin.UserIdentity.EntraB2C.Internals;
 
 public class LoadIdentityRequestValidator : IValidator<LoadIdentityRequest>
 {
-    public IEnumerable<ServiceError> Validate(LoadIdentityRequest instance)
+    public IEnumerable<ServiceError> Validate(LoadIdentityRequest? instance)
     {
         List<ServiceError> errors = new();
 

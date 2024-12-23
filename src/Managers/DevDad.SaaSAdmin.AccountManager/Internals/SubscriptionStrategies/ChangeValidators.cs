@@ -71,8 +71,17 @@ internal class ChangeRequestValidator : IValidator<ChangeStrategyRequest?>
     }
 }
 
+/// <summary>
+/// Validates the CustomerSubscription instance.
+/// </summary>
 internal class SubscriptionValidator : IValidator<CustomerSubscription>
 {
+    /// <summary>
+    /// This overload checks that the provided custoemr subscription is well formed
+    /// and complete.
+    /// </summary>
+    /// <param name="instance"></param>
+    /// <returns></returns>
     public IEnumerable<ServiceError> Validate(CustomerSubscription? instance)
     {
         List<ServiceError> errors = new();
@@ -91,14 +100,34 @@ internal class SubscriptionValidator : IValidator<CustomerSubscription>
             return errors;
         }
 
-        
-
         return errors;
     }
 
+    /// <summary>
+    /// This overload accespts a delegate to the validation for a speciic change action.
+    /// This delegate is implemented on the SubscriptionChange class that performs the
+    /// specific transformation, to keep all code related to that transformation in one
+    /// place.
+    /// </summary>
+    /// <param name="instance"></param>
+    /// <param name="contextualDelegate"></param>
+    /// <returns></returns>
     public IEnumerable<ServiceError> Validate(CustomerSubscription? instance, Func<CustomerSubscription?, IEnumerable<ServiceError>> contextualDelegate)
     {
-        return contextualDelegate(instance);
+        var errors = new List<ServiceError>();
+        
+        var generalErrors = Validate(instance);
+        errors.AddRange(generalErrors);
+
+        if(errors.Any(e=> e.Severity == ErrorSeverity.Error))
+        {
+            return errors;
+        }
+
+        var contextualErrors = contextualDelegate(instance);
+        errors.AddRange(contextualErrors);
+
+        return errors;
     }
 }
 

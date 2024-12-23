@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using DevDad.SaaSAdmin.UserIdentity.EntraB2C.Internals;
 using DevDad.SaaSAdmin.iFX;
 using ThatDeveloperDad.iFX.CollectionUtilities;
-using Microsoft.Graph.Drives.Item.Items.Item.Workbook.Functions.Now;
 
 namespace DevDad.SaaSAdmin.UserIdentity.EntraB2C;
 
@@ -84,7 +83,7 @@ public class UserAccessEntraProvider
                     Severity = ErrorSeverity.Error,
                     Message = "No user was found with the provided UserId.",
                     Site = "UserAccessEntraProvider.LoadUserIdentityAsync",
-                    ErrorKind = "UserIdentity_NotFound"
+                    ErrorKind = IdentityServiceConstants.ErrorKinds.UnknownIdentity
                 });
                 return response;
             }
@@ -105,7 +104,7 @@ public class UserAccessEntraProvider
                 Severity = ErrorSeverity.Error,
                 Message = "An exception occurred while connecting to the Identity Store.",
                 Site = $"{nameof(UserAccessEntraProvider)}.{nameof(LoadUserIdentityAsync)}",
-                ErrorKind = $"{ServiceErrorKinds.StepFailed}RemoteServiceException"
+                ErrorKind = $"{ServiceErrorKinds.StepFailed}{IdentityServiceConstants.ErrorKinds.ExternalApiError}"
             });
         }
         return response;
@@ -212,7 +211,7 @@ public class UserAccessEntraProvider
                 Severity = ErrorSeverity.Error,
                 Message = errorMessage,
                 Site = $"{nameof(UserAccessEntraProvider)}.{nameof(ReconcileUserMembershipsAsync)}",
-                ErrorKind = $"{ServiceErrorKinds.StepFailed}.RemoteServiceException"
+                ErrorKind = $"{ServiceErrorKinds.StepFailed}.{IdentityServiceConstants.ErrorKinds.ExternalApiError}"
             };
             response.AddError(processFailure);
             response.Completed = false;
@@ -294,6 +293,5 @@ public class UserAccessEntraProvider
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
-
 
 }

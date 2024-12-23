@@ -13,7 +13,8 @@ internal class ChangeStrategyFactory
     public ChangeStrategyFactory(ILogger? logger)
     {
         _logger = logger;
-        _changeStrategies.Add(SubscriptionChangeKinds.ActivityKind_Create, new CreateSubscriptionStrategy());;
+        _changeStrategies.Add(SubscriptionChangeKinds.ActivityKind_Create, new CreateSubscriptionStrategy());
+        _changeStrategies.Add(SubscriptionChangeKinds.ActivityKind_Renew, new RenewSubscriptionStategy());
     }
 
     /// <summary>

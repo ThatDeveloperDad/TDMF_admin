@@ -30,7 +30,9 @@ internal class ChangeStrategyRequest : OperationRequest<CustomerSubscription>
             SubscriptionTemplateResource subscriptionTemplate
         ) :this(parentRequest, subscriptionToUpdate)
     {
-
+        SubscriptionToUpdate = subscriptionToUpdate;
+        ChangeDetails = actionDetail;
+        TargetTemplate = subscriptionTemplate;
     }
         
     public CustomerSubscription? SubscriptionToUpdate 

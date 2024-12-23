@@ -14,7 +14,7 @@ public class SubscriptionTemplateResource
         Name = string.Empty;
         Description = string.Empty;
         ConfersMembershipIn = Array.Empty<string>();
-        RenewalPeriod = 0;
+        RenewalPeriodDays = 0;
         ResourceGrants = new List<QuotaGrantResource>();
         AllowedStatuses = Array.Empty<string>();
         DefaultStatus = string.Empty;
@@ -37,7 +37,7 @@ public class SubscriptionTemplateResource
 
     /// <summary>
     /// Describes how often the subscription will renew.
-    public int RenewalPeriod { get; set; }
+    public int RenewalPeriodDays { get; set; }
 
     public List<QuotaGrantResource> ResourceGrants { get; private set; }
 

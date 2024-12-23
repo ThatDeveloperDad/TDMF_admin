@@ -9,7 +9,7 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts;
 [DomainEntity(
     entityName:Entities.UserResourceQuota.EntityName,
     declaringArchetype:ComponentArchetype.Manager)]
-public class AppResourceQuota:IdiomaticType
+public class UserResourceQuota:IdiomaticType
 {
     /// <summary>
     /// Identifies the general kind of resource that has this quota

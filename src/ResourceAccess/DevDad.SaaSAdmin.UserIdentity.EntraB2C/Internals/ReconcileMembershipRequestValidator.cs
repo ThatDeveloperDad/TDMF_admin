@@ -11,7 +11,7 @@ internal class ReconcileMembershipRequestValidator : IValidator<ReconcileMembers
 
 
     public IEnumerable<ServiceError> Validate(
-        ReconcileMembershipsRequest instance)
+        ReconcileMembershipsRequest? instance)
     {
         var errors = new List<ServiceError>();
 
