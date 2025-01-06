@@ -12,7 +12,7 @@
 			"type": "process",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/src/Clients"
+				"cwd": "${workspaceFolder}/src/Clients/DevDad.SaaSAdmin.Functions"
 			}
 		},
 		{
@@ -31,7 +31,7 @@
 			},
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/src/Clients"
+				"cwd": "${workspaceFolder}/src/Clients/DevDad.SaaSAdmin.Functions"
 			}
 		},
 		{
@@ -47,7 +47,7 @@
 			"type": "process",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/src/Clients"
+				"cwd": "${workspaceFolder}/src/Clients/DevDad.SaaSAdmin.Functions"
 			}
 		},
 		{
@@ -64,14 +64,14 @@
 			"dependsOn": "clean release (functions)",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/src/Clients"
+				"cwd": "${workspaceFolder}/src/Clients/DevDad.SaaSAdmin.Functions"
 			}
 		},
 		{
 			"type": "func",
 			"dependsOn": "build (functions)",
 			"options": {
-				"cwd": "${workspaceFolder}/src/Clients/bin/Debug/net9.0"
+				"cwd": "${workspaceFolder}/src/Clients/DevDad.SaaSAdmin.Functions/bin/Debug/net9.0"
 			},
 			"command": "host start",
 			"isBackground": true,
