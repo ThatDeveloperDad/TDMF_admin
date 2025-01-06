@@ -382,6 +382,7 @@ public class ModifySubscriptionUnitTests
     [Fact]
     public void TestCancelFree_NewUser_ExpectValidationError()
     {
+        //Arrange
         IAccountManager managerToTest = ConfigureTestInstance();
         var request = new TestScenarioBuilder()
             .CancelFree()
@@ -389,14 +390,101 @@ public class ModifySubscriptionUnitTests
             .Build();
         string expectedError = AccountManagerConstants.ModifySubscriptionErrors.Validation_ActivityNotValidForSubscriptionType;
 
+        //Act
         var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
 
+        // Get error messages into a string for easier debugging.
         StringBuilder sb = new();
         foreach(string? error in response.ErrorReport)
         {
             sb.AppendLine(error);
         }
 
+        // Assert
+        Assert.NotNull(response);
+        Assert.True(response.SubscriptionWasUpdated == false);
+        Assert.True(ResponseContainsError(response, expectedError), sb.ToString());
+    }
+
+    [Fact]
+    public void TestCancelFree_FreeUser_ExpectValidationError()
+    {
+        IAccountManager managerToTest = ConfigureTestInstance();
+        var request = new TestScenarioBuilder()
+            .CancelFree()
+            .WithFreeUser()
+            .Build();
+        string expectedError = AccountManagerConstants.ModifySubscriptionErrors.Validation_ActivityNotValidForSubscriptionType;
+
+        var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
+
+        // Get error messages into a string for easier debugging.
+        StringBuilder sb = new();
+        foreach(string? error in response.ErrorReport)
+        {
+            sb.AppendLine(error);
+        }
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.True(response.SubscriptionWasUpdated == false);
+        Assert.True(ResponseContainsError(response, expectedError), sb.ToString());
+    }
+
+    [Fact]
+    public void TestCancel_ActivePaidUser_ExpectSuccess()
+    {
+        IAccountManager managerToTest = ConfigureTestInstance();
+        var request = new TestScenarioBuilder()
+            .CancelPaid()
+            .WithActivePaidUser()
+            .Build();
+
+        var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
+
+        Assert.NotNull(response);
+        Assert.True(response.SubscriptionWasUpdated == true);
+        Assert.True(response.HasErrors == false);
+    }
+
+    [Fact]
+    public void TestCancel_ExpiredPaidUser_ExpectSuccess()
+    {
+        IAccountManager managerToTest = ConfigureTestInstance();
+        var request = new TestScenarioBuilder()
+            .CancelPaid()
+            .WithExpiredPaidUser()
+            .Build();
+
+        var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.True(response.SubscriptionWasUpdated == true);
+        Assert.True(response.HasErrors == false);
+    }
+
+    [Fact]
+    public void TestCancel_CancelledPaidUser_ExpectValidationError()
+    {
+        IAccountManager managerToTest = ConfigureTestInstance();
+        var request = new TestScenarioBuilder()
+            .CancelPaid()
+            .WithCancelledPaidUser()
+            .Build();
+
+        string expectedError = AccountManagerConstants.ModifySubscriptionErrors.Validation_ActivityNotValidForStatus;
+
+        var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
+
+        // Get error messages into a string for easier debugging.
+        StringBuilder sb = new();
+        foreach(string? error in response.ErrorReport)
+        {
+            sb.AppendLine(error);
+        }
+
+        // Assert
         Assert.NotNull(response);
         Assert.True(response.SubscriptionWasUpdated == false);
         Assert.True(ResponseContainsError(response, expectedError), sb.ToString());

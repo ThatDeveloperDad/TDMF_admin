@@ -14,29 +14,6 @@ sealed class ExpireSubscriptionStrategy : ChangeStrategyBase
 {
     public override string ActivityKind => SubscriptionChangeKinds.ActivityKind_Expire;
 
-    /* public override ChangeStrategyResponse ApplyChange(ChangeStrategyRequest request)
-    {
-        CustomerSubscription? transformedSubscription = null;
-        ChangeStrategyResponse response = new ChangeStrategyResponse(request, transformedSubscription);
-        response.ChangeCompleted = false;
-        string changeStep = "Validation";
-        string executionSite = $"{nameof(ExpireSubscriptionStrategy)}.{nameof(ApplyChange)}{changeStep}";
-
-        var requestErrors = ValidateRequest(request);
-        response.AddErrors(requestErrors, executionSite);
-        if(response.ShouldHaltProcess)
-        {
-            return response;
-        }
-
-        // Rather than a reference assignment, let's do a deep copy of the current sub.
-        transformedSubscription = TransformSubscription(_subscriptionToUpdate!, _subscriptionTemplate!, _changeDetail!);
-
-        response.Payload = transformedSubscription;
-        response.ChangeCompleted = true;
-        return response;
-    } */
-
     protected override IEnumerable<ServiceError> ValidateSubscriptionForChange(CustomerSubscription? subscription)
     {
         List<ServiceError> errors = new();
