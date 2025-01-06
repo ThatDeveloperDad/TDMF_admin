@@ -397,3 +397,10 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /src/Tests/TestConsole/.env
+.vscode/extensions.json
+.vscode/launch.json
+.vscode/settings.json
+src/.DS_Store
+src/Clients/.DS_Store
+src/Clients/DevDad.SaaSAdmin.API/appsettings.Development.json
+src/Tests/.DS_Store
