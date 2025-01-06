@@ -2,10 +2,12 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DevDad.SaaSAdmin.AccountManager.Contracts;
+using DevDad.SaaSAdmin.AccountManager.Internals.SubscriptionStrategies;
 using DevDad.SaaSAdmin.Catalog.Abstractions;
 using DevDad.SaaSAdmin.iFX;
 using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 using DevDad.SaaSAdmin.UserIdentity.Abstractions;
+using Microsoft.Extensions.Logging;
 using ThatDeveloperDad.iFX.CollectionUtilities;
 using ThatDeveloperDad.iFX.CollectionUtilities.Operators;
 using ThatDeveloperDad.iFX.DomainUtilities;
@@ -19,20 +21,24 @@ internal class CustomerBuilder
     private readonly IUserAccountAccess _accountAccess; 
     private readonly ICatalogAccess _catalogAccess;
 
+    private readonly ChangeStrategyFactory _changeStrategyFactory;
+
     public CustomerBuilder(
         IUserAccountAccess accountAccess,
         IUserIdentityAccess identityAccess,
-        ICatalogAccess catalogAccess)
+        ICatalogAccess catalogAccess,
+        ILogger? logger = null)
     {
         _accountAccess = accountAccess;
         _identityAccess = identityAccess;
         _catalogAccess = catalogAccess;
+        _changeStrategyFactory = new(logger);
     }
 
-    public async Task<CustomerProfileResponse> LoadOrBuildCustomer(BuildProfileRequest requestData)
+    public async Task<CustomerProfileResponse> LoadOrBuildCustomer(BuildProfileRequest request)
     {
         //First step is to try and load the identity information for the userId in the requestData.
-        CustomerProfileResponse response = await FetchAndApplyIdentity(requestData);
+        CustomerProfileResponse response = await FetchAndApplyIdentity(request);
         if(response.HasErrors == true)
         {
             return response;
@@ -66,6 +72,96 @@ internal class CustomerBuilder
         return response;
     }
 
+    public async Task<CustomerProfileResponse> PerformSubscriptionAction(ModifySubscriptionRequest request)
+    {
+        string thisErrorSite = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionAction)}";
+        CustomerProfileResponse thisResponse = new(request, request?.Payload?.CustomerProfile?? new CustomerProfile());
+
+        if(request == null || request.Payload == null)
+        {
+            thisResponse.AddError(new ServiceError
+            {
+                Message = "PerformSubscriptionActivity requires a ModifySubscriptionRequest with a ModifySubscriptionData payload.",
+                Severity = ErrorSeverity.Error,
+                Site = thisErrorSite,
+                ErrorKind = ServiceErrorKinds.RequestValidation
+            });
+            return thisResponse;
+        }
+
+        // Prepare working variables.
+        string currentStep = "PrepareWorkingVariables";
+        CustomerProfile profileToUpdate = request.Payload.CustomerProfile;
+        SubscriptionActionDetail actionDetail = request.Payload.ChangeDetail;
+        CustomerSubscription? subscriptionToUpdate = profileToUpdate.Subscription;
+
+        SubscriptionTemplateResource? subscriptionTemplate = await _catalogAccess.GetCatalogItemAsync(actionDetail.SubscriptionSku);
+        if(subscriptionTemplate == null)    
+        {
+            thisResponse.AddError(new ServiceError
+            {
+                Message = $"Could not locate a Subscription Template with SKU {actionDetail.SubscriptionSku}.",
+                Severity = ErrorSeverity.Error,
+                Site = thisErrorSite,
+                ErrorKind = $"{ServiceErrorKinds.StepFailed}{currentStep}"
+            });
+
+            return thisResponse;
+        }
+
+        currentStep = "ApplySubscriptionChange";
+        var changeStrategy = _changeStrategyFactory.GetChangeStrategy(actionDetail.ActionName);
+
+        if(changeStrategy == null)
+        {
+            thisResponse.AddError(new ServiceError
+            {
+                Message = $"Could not locate a Strategy implementation for Activity {actionDetail.ActionName}.  No Changes Made.",
+                Severity = ErrorSeverity.Error,
+                Site = $"{nameof(CustomerBuilder)}.{nameof(PerformSubscriptionAction)}",
+                ErrorKind = $"{ServiceErrorKinds.StepFailed}{currentStep}"
+            });
+            thisResponse.Payload = profileToUpdate;
+            return thisResponse;
+        }
+
+        ChangeStrategyRequest changeRequest = new
+            (
+                request, 
+                subscriptionToUpdate, 
+                actionDetail, 
+                subscriptionTemplate
+            );
+
+        ChangeStrategyResponse changeResponse = changeStrategy.ApplyChange(changeRequest);
+
+        if(changeResponse.Successful == false)
+        {
+            thisResponse.AddErrors(changeResponse, thisErrorSite);
+            return thisResponse;
+        }
+
+        if(changeResponse.ChangeCompleted == false)
+        {
+            thisResponse.AddError(new ServiceError
+            {
+                Message = $"The Subscription Activity {actionDetail.ActionName} did not complete successfully.",
+                Severity = ErrorSeverity.Error,
+                Site = thisErrorSite,
+                ErrorKind = $"{ServiceErrorKinds.StepFailed}{currentStep}"
+            });
+            thisResponse.Payload = profileToUpdate;
+            return thisResponse;
+        }
+
+        profileToUpdate.Subscription = changeResponse.Payload!;
+        thisResponse.Payload = profileToUpdate;
+
+        return thisResponse;
+    }
+
+
+#region Private LoadOrBuildCustomer Methods
     private async Task<CustomerProfileResponse> FetchAndApplyIdentity(BuildProfileRequest requestData)
     {
         CustomerProfileResponse response = new(requestData);
@@ -86,7 +182,13 @@ internal class CustomerBuilder
         if(loadIdentityResponse.Successful)
         {
             profile = DomainObjectMapper.MapEntities<UserIdentityResource, CustomerProfile>(
-                loadIdentityResponse.Payload!);   
+                loadIdentityResponse.Payload!); 
+            ExternalId idFromIdentityService = new()
+            {
+                Vendor = _identityAccess.IdentityVendor,
+                IdAtVendor = loadIdentityResponse.Payload?.UserId??requestData.UserId
+            };
+            profile.ExternalIds.Add(idFromIdentityService);
             response.Payload = profile;
             return response;
         }
@@ -231,7 +333,7 @@ internal class CustomerBuilder
             subscription.History.Add(
                 new SubscriptionActivity(){
                     ActivityDateUTC = DateTime.UtcNow,
-                    ActivityKind = SubscriptionChangeKinds.ActivityKind_Created
+                    ActivityKind = SubscriptionChangeKinds.ActivityKind_Create
                 }
             );
 
@@ -270,5 +372,6 @@ internal class CustomerBuilder
         response.Payload = profile;
         return response;
     }
+#endregion // Private LoadOrBuildCustomer Methods
 
 }

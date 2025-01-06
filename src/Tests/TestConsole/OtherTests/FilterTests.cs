@@ -40,7 +40,7 @@ public class FilterTests
         Console.WriteLine();
         Console.WriteLine("Add a criteria and do it again.");
         filter.AddCriteria(
-            propertyName: nameof(SubscriptionTemplateResource.RenewalPeriod), 
+            propertyName: nameof(SubscriptionTemplateResource.RenewalPeriodDays), 
             operatorKind: OperatorKinds.LessThan, 
             expectedValue: 100);
         
@@ -86,7 +86,7 @@ public class FilterTests
         var filter = new Filter<SubscriptionTemplateResource>();
         int[] allowedSkus = new[] { 7, 30, 365 };
         filter.AddCriteria(
-            propertyName: nameof(SubscriptionTemplateResource.RenewalPeriod), 
+            propertyName: nameof(SubscriptionTemplateResource.RenewalPeriodDays), 
             operatorKind: OperatorKinds.IsContainedIn, 
             expectedValue: allowedSkus);
         

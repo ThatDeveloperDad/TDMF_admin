@@ -1,8 +1,10 @@
 using DevDad.SaaSAdmin.AccountManager.Contracts;
+using DevDad.SaaSAdmin.iFX;
 using DotNetEnv;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TestConsole.OtherTests;
 using ThatDeveloperDad.iFX;
 using ThatDeveloperDad.iFX.CollectionUtilities;
 using ThatDeveloperDad.iFX.DomainUtilities;
@@ -13,9 +15,6 @@ namespace TestConsole
 	{
 		static void Main(string[] args)
 		{
-			// Get rid of this once the Filter Class is tested.
-/* 			OtherTests.FilterTests.TestFilterClass();
-			return; */
 
 			var bootLogger = CreateBootLogger();
 			IConfiguration systemConfig = LoadSystemConfiguration(bootLogger);
@@ -103,7 +102,14 @@ namespace TestConsole
 			bootLogger.LogInformation("Nothing more to do.  Imma take a nap right here.");
 		}
 
-		
+		static void TestEntra()
+		{
+			ILogger logger = CreateBootLogger();
+			IConfiguration config = LoadSystemConfiguration(logger);
+			EntraAccessTests tests = new(config, logger);
+
+			tests.RunTests();
+		}
 
 		static ILogger CreateBootLogger()
 		{

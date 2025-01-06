@@ -36,6 +36,7 @@ public partial class SaaSDomain
 
             public const string ActivityKind = "ActivityKind";
 
+            public const string Comment = "Comment";
         }
     }
 }

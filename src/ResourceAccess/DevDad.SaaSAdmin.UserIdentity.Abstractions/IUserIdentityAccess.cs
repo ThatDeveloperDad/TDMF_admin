@@ -11,4 +11,6 @@ public interface IUserIdentityAccess : IResourceAccessService
 
     Task<LoadIdentityResponse> LoadUserIdentityAsync(LoadIdentityRequest request);
 
+    Task<ReconcileMembershipsResponse> ReconcileUserMembershipsAsync(ReconcileMembershipsRequest request);
+
 }

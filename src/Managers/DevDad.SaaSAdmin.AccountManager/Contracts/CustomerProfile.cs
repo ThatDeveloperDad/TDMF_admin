@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using ThatDeveloperDad.iFX.DomainUtilities;
 using ThatDeveloperDad.iFX.DomainUtilities.Attributes;
 using ThatDeveloperDad.iFX.ServiceModel.Taxonomy;
@@ -31,5 +32,16 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 			isCollection:true,
 			valueEntityName:Entities.ExternalUserId.EntityName)]
 		public List<ExternalId> ExternalIds { get; set; } = new();
+
+		internal string? GetUserIdForVendor(string vendorName)
+		{
+			string? id = null;
+
+			id = ExternalIds
+				.FirstOrDefault(e=> e.Vendor == vendorName)?
+				.IdAtVendor;
+
+			return id;
+		}
 	}
 }

@@ -64,7 +64,7 @@ public class StaticCatalogProvider : ICatalogAccess
             SKU = SKUS_TDMF_FR,
             Name = "The DM's Familiar - Free Tier",
             Description = "Provides access to the Random NPC Generator, and any characters created and saved during a paid subscription time.",
-            RenewalPeriod = SubscriptionRenewalFrequencies.Permanent,
+            RenewalPeriodDays = SubscriptionRenewalFrequencies.Permanent,
             ConfersMembershipIn = new string[]{EntraGroups.FreeUsers},
             AllowedStatuses = new string[]{SubscriptionStatuses.Active},
             DefaultStatus = SubscriptionStatuses.Active
@@ -76,7 +76,7 @@ public class StaticCatalogProvider : ICatalogAccess
             SKU = SKUS_TDMF_PD_MNTH,
             Name = "The DM's Familiar - Monthly Subscription",
             Description = "Provides access to the RandomNPC Generator, up to 100 AI Descriptions per month, and Storage Space for up to 100 NPCs.",
-            RenewalPeriod = SubscriptionRenewalFrequencies.Monthly,
+            RenewalPeriodDays = SubscriptionRenewalFrequencies.Monthly,
             ConfersMembershipIn = new string[]
                 {
                     EntraGroups.FreeUsers, 

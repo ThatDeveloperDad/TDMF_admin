@@ -14,12 +14,12 @@ public class UserQuotas:IdiomaticType
     public UserQuotas()
     {
         UserId = string.Empty;
-        StoredNpcs = new AppResourceQuota()
+        StoredNpcs = new UserResourceQuota()
         {
             MeteredResource = MeteredResourceKinds.NpcStorage
         };
         
-        AiGeneratedNpcs = new AppResourceQuota()
+        AiGeneratedNpcs = new UserResourceQuota()
         {
             MeteredResource = MeteredResourceKinds.NpcAiDetail
         };
@@ -31,11 +31,11 @@ public class UserQuotas:IdiomaticType
     [EntityAttribute(Entities.UserQuotas.Attributes.Storage,
         isCollection:false,
         valueEntityName:Entities.UserResourceQuota.EntityName)]
-    public AppResourceQuota StoredNpcs {get;set;}
+    public UserResourceQuota StoredNpcs {get;set;}
 
     [EntityAttribute(Entities.UserQuotas.Attributes.AiGenerations,
         isCollection:false,
         valueEntityName:Entities.UserResourceQuota.EntityName)]
-    public AppResourceQuota AiGeneratedNpcs{get;set;}
+    public UserResourceQuota AiGeneratedNpcs{get;set;}
 
 }

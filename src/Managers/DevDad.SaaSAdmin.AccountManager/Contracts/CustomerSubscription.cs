@@ -50,5 +50,11 @@ namespace DevDad.SaaSAdmin.AccountManager.Contracts
 			isCollection:true,
 			valueEntityName:Entities.SubscriptionHistoryEntry.EntityName)] 
 		public List<SubscriptionActivity> History { get; set; } = new List<SubscriptionActivity>();
+
+		public void SetUserId(string userId)
+		{
+			UserId = userId;
+			Quotas.UserId = userId;
+		}
 	}
 }
