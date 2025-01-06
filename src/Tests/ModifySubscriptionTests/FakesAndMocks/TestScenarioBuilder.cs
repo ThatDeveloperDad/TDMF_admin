@@ -59,6 +59,24 @@ public class TestScenarioBuilder
         return this;
     }
 
+    public TestScenarioBuilder ExpireFree()
+    {
+        _actionDetail.ActionName = SubscriptionChangeKinds.ActivityKind_Expire;
+        _actionDetail.SubscriptionSku = SubscriptionIdentifiers.SKUS_TDMF_FREE;
+        _actionDetail.RequestSource = ChangeRequestSource.AdminBackend;
+
+        return this;
+    }
+
+    public TestScenarioBuilder ExpirePaid()
+    {
+        _actionDetail.ActionName = SubscriptionChangeKinds.ActivityKind_Expire;
+        _actionDetail.SubscriptionSku = SubscriptionIdentifiers.SKUS_TDMF_PAID_MONTHLY;
+        _actionDetail.RequestSource = ChangeRequestSource.AdminBackend;
+
+        return this;
+    }
+
     public TestScenarioBuilder CancelFree()
     {
         _actionDetail.ActionName = SubscriptionChangeKinds.ActivityKind_Cancel;

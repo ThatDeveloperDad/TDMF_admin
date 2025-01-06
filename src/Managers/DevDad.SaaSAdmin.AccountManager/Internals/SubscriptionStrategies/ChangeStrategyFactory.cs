@@ -15,6 +15,8 @@ internal class ChangeStrategyFactory
         _logger = logger;
         _changeStrategies.Add(SubscriptionChangeKinds.ActivityKind_Create, new CreateSubscriptionStrategy());
         _changeStrategies.Add(SubscriptionChangeKinds.ActivityKind_Renew, new RenewSubscriptionStategy());
+        _changeStrategies.Add(SubscriptionChangeKinds.ActivityKind_Expire, new ExpireSubscriptionStrategy());
+        _changeStrategies.Add(SubscriptionChangeKinds.ActivityKind_Cancel, new CancelSubscriptionStrategy());
     }
 
     /// <summary>

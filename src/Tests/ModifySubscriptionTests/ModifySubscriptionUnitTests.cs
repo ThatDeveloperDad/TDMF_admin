@@ -1,10 +1,12 @@
-﻿using DevDad.SaaSAdmin.AccountManager;
+﻿using System.Text;
+using DevDad.SaaSAdmin.AccountManager;
 using DevDad.SaaSAdmin.AccountManager.Contracts;
 using DevDad.SaaSAdmin.Catalog.Abstractions;
 using DevDad.SaaSAdmin.Catalog.HardCoded;
 using DevDad.SaaSAdmin.UserAccountAccess.Abstractions;
 using DevDad.SaaSAdmin.UserIdentity.Abstractions;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.TestPlatform.CoreUtilities.Extensions;
 using ModifySubscriptionTests.FakesAndMocks;
 
 namespace ModifySubscriptionTests;
@@ -247,6 +249,117 @@ public class ModifySubscriptionUnitTests
 
 #endregion // RenewSubscription Scenarios
 
+#region Expire scenarios
+
+    [Fact]
+    public void TestExpireFree_UnknownUser_ExpectValidationError()
+    {
+        IAccountManager managerToTest = ConfigureTestInstance();
+        var request = new TestScenarioBuilder()
+            .ExpireFree()
+            .WithUnknownUser()
+            .Build();
+        string expectedError = IdentityServiceConstants.ErrorKinds.UnknownIdentity;
+
+        var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
+
+        Assert.NotNull(response);
+        Assert.True(response.SubscriptionWasUpdated == false);
+        Assert.True(ResponseContainsError(response, expectedError));
+    }
+
+    [Fact]
+    public void TestExpireFree_NewUser_ExpectValidationError()
+    {
+        IAccountManager managerToTest = ConfigureTestInstance();
+        var request = new TestScenarioBuilder()
+            .ExpireFree()
+            .WithBrandNewUser()
+            .Build();
+        string expectedError = AccountManagerConstants.ModifySubscriptionErrors.Validation_ActivityNotValidForSubscriptionType;
+
+        var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
+
+        Assert.NotNull(response);
+        Assert.True(response.SubscriptionWasUpdated == false);
+        Assert.True(ResponseContainsError(response, expectedError));
+    }
+
+    [Fact]
+    public void TestExpireFree_FreeUser_ExpectValidationError()
+    {
+        IAccountManager managerToTest = ConfigureTestInstance();
+        var request = new TestScenarioBuilder()
+            .ExpireFree()
+            .WithFreeUser()
+            .Build();
+        string expectedError = AccountManagerConstants.ModifySubscriptionErrors.Validation_ActivityNotValidForSubscriptionType;
+
+        var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
+
+        StringBuilder sb = new();
+        foreach(string? error in response.ErrorReport)
+        {
+            sb.AppendLine(error);
+        }
+
+        Assert.NotNull(response);
+        Assert.True(response.SubscriptionWasUpdated == false);
+        Assert.True(ResponseContainsError(response, expectedError), sb.ToString());
+    }
+
+    [Fact]
+    public void TestExpire_ActivePaidUser_ExpectSuccess()
+    {
+        IAccountManager managerToTest = ConfigureTestInstance();
+        var request = new TestScenarioBuilder()
+            .ExpirePaid()
+            .WithActivePaidUser()
+            .Build();
+        
+        var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
+
+        Assert.NotNull(response);
+        Assert.True(response.SubscriptionWasUpdated == true);
+    }
+
+    [Fact]
+    public void TestExpire_ExpiredPaidUser_ExpectValidationError()
+    {
+        IAccountManager managerToTest = ConfigureTestInstance();
+        var request = new TestScenarioBuilder()
+            .ExpirePaid()
+            .WithExpiredPaidUser()
+            .Build();
+        string expectedError = AccountManagerConstants.ModifySubscriptionErrors.Validation_ActivityNotValidForStatus;
+        var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
+
+        Assert.NotNull(response);
+        Assert.True(response.SubscriptionWasUpdated == false);
+        Assert.True(ResponseContainsError(response, expectedError));
+    }
+
+    [Fact]
+    public void TestExpire_CancelledPaidUser_ExpectValidationError()
+    {
+        IAccountManager managerToTest = ConfigureTestInstance();
+        var request = new TestScenarioBuilder()
+            .ExpirePaid()
+            .WithCancelledPaidUser()
+            .Build();
+        string expectedError = AccountManagerConstants.ModifySubscriptionErrors.Validation_ActivityNotValidForStatus;
+        var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
+
+        Assert.NotNull(response);
+        Assert.True(response.SubscriptionWasUpdated == false);
+        Assert.True(ResponseContainsError(response, expectedError));
+    }
+
+    // Add test for Expire Suspended user - should fail.
+    // Don't do this until we implement Suspend - we may not.
+
+#endregion // Expire scenarios
+
 #region Cancel scenarios
     
     [Fact]
@@ -278,9 +391,15 @@ public class ModifySubscriptionUnitTests
 
         var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
 
+        StringBuilder sb = new();
+        foreach(string? error in response.ErrorReport)
+        {
+            sb.AppendLine(error);
+        }
+
         Assert.NotNull(response);
         Assert.True(response.SubscriptionWasUpdated == false);
-        Assert.True(ResponseContainsError(response, expectedError));
+        Assert.True(ResponseContainsError(response, expectedError), sb.ToString());
     }
 
 # endregion // Cancel scenarios
@@ -290,4 +409,5 @@ public class ModifySubscriptionUnitTests
         bool errorIsPresent = response.ErrorReport.Any(er=> er!=null &&  er.Contains(errorMessage));
         return errorIsPresent;
     }
+
 }

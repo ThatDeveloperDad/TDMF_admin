@@ -17,55 +17,7 @@ sealed class RenewSubscriptionStategy : ChangeStrategyBase
 {
     public override string ActivityKind => SubscriptionChangeKinds.ActivityKind_Renew;
 
-    private CustomerSubscription? _subscriptionToUpdate;
-    private SubscriptionTemplateResource? _subscriptionTemplate;
-    private SubscriptionActionDetail? _changeDetail;
-
     public RenewSubscriptionStategy() { }
-
-
-    public override ChangeStrategyResponse ApplyChange(ChangeStrategyRequest request)
-    {
-        CustomerSubscription? transformedSubscription = null;
-        ChangeStrategyResponse response = new ChangeStrategyResponse(request, transformedSubscription);
-        response.ChangeCompleted = false;
-        string changeStep = "Validation";
-        string executionSite = $"{nameof(RenewSubscriptionStategy)}.{nameof(ApplyChange)}{changeStep}";
-
-        var requestErrors = ValidateRequest(request);
-        response.AddErrors(requestErrors, executionSite);
-        if(response.ShouldHaltProcess)
-        {
-            return response;
-        }
-
-        // Rather than a reference assignment, let's do a deep copy of the current sub.
-        transformedSubscription = DomainObjectMapper
-            .MapEntities<CustomerSubscription, CustomerSubscription>(_subscriptionToUpdate!);
-
-        // Now, we set the properties on TransformedSubscription in accordance with the change.
-        // 1:  Bump the EndDate.
-        int daysInPeriod = _subscriptionTemplate!.RenewalPeriodDays;
-        transformedSubscription.EndDateUtc = transformedSubscription.EndDateUtc.AddDays(daysInPeriod);
-        // 2:  Set WillRenew to True.
-        transformedSubscription.WillRenew = true;
-        // 3:  Set Status to Active.
-        transformedSubscription.CurrentStatus = SubscriptionChangeKinds.ActivityStatusResult[_changeDetail!.ActionName];
-        // 4:  Update the Quotas as specified by the Quoate Rules in the template.
-        transformedSubscription = UpdateQuotas(transformedSubscription, _subscriptionTemplate);
-        // 5:  Add a new Activity to the History.
-        SubscriptionActivity activityLogItem = new()
-        {
-            ActivityKind = _changeDetail.ActionName,
-            ActivityDateUTC = DateTime.UtcNow,
-            Comment = $"Action Triggered by {_changeDetail.RequestSource}.  Vendor: {_changeDetail.VendorName}."
-        };
-        // 6:  Put a little dirt under their pillow.  (For the Dirt man)
-
-        response.Payload = transformedSubscription;
-        response.ChangeCompleted = true;
-        return response;
-    }
 
     /// <summary>
     /// Uses the Quota information on the template to update the user Quotas on the subscription.
@@ -83,6 +35,7 @@ sealed class RenewSubscriptionStategy : ChangeStrategyBase
         if(aiQuotaRules != null && aiQuotaRules.RenewalBudget > 0)
         {
             subscription.Quotas.AiGeneratedNpcs.Budget = aiQuotaRules.RenewalBudget;
+            subscription.Quotas.AiGeneratedNpcs.Consumption = 0;
         }
 
         // Storage renewal budget is currently 0 across the board, but we may
@@ -99,32 +52,7 @@ sealed class RenewSubscriptionStategy : ChangeStrategyBase
         return subscription;
     }
 
-    private IEnumerable<ServiceError> ValidateRequest(ChangeStrategyRequest request)
-    {
-        List<ServiceError> errors = new();
-
-        var requestErrors = new ChangeRequestValidator().Validate(request);
-        errors.AddRange(requestErrors);
-        if(errors.Any(e=> e.Severity == ErrorSeverity.Error))
-        {
-            return errors;
-        }
-
-        _changeDetail = request.ChangeDetails;
-        _subscriptionToUpdate = request.Payload;
-        _subscriptionTemplate = request.TargetTemplate;
-
-        var changeErrors = new SubscriptionActionValidator().Validate(_changeDetail);
-        errors.AddRange(changeErrors);
-
-        var subscriptionErrors = new SubscriptionValidator().Validate
-            (_subscriptionToUpdate, ValidateCurrentSubscriptionForRenewal);
-        errors.AddRange(subscriptionErrors);
-
-        return errors;
-    }
-
-    private IEnumerable<ServiceError> ValidateCurrentSubscriptionForRenewal(CustomerSubscription? subscriptionToUpdate)
+    protected override IEnumerable<ServiceError> ValidateSubscriptionForChange(CustomerSubscription? subscriptionToUpdate)
     {
         List<ServiceError> errors = new();
 
@@ -189,5 +117,35 @@ sealed class RenewSubscriptionStategy : ChangeStrategyBase
         }
 
         return errors;
+    }
+
+    protected override CustomerSubscription TransformSubscription(
+        CustomerSubscription subscription, 
+        SubscriptionTemplateResource template, 
+        SubscriptionActionDetail changeDetail)
+    {
+        CustomerSubscription transformedSubscription = DomainObjectMapper
+            .MapEntities<CustomerSubscription, CustomerSubscription>(subscription);
+
+        // Now, we set the properties on TransformedSubscription in accordance with the change.
+        // 1:  Bump the EndDate.
+        int daysInPeriod = _subscriptionTemplate!.RenewalPeriodDays;
+        transformedSubscription.EndDateUtc = transformedSubscription.EndDateUtc.AddDays(daysInPeriod);
+        // 2:  Set WillRenew to True.
+        transformedSubscription.WillRenew = true;
+        // 3:  Set Status to Active.
+        transformedSubscription.CurrentStatus = SubscriptionChangeKinds.ActivityStatusResult[_changeDetail!.ActionName];
+        // 4:  Update the Quotas as specified by the Quoate Rules in the template.
+        transformedSubscription = UpdateQuotas(transformedSubscription, _subscriptionTemplate);
+        // 5:  Add a new Activity to the History.
+        SubscriptionActivity activityLogItem = new()
+        {
+            ActivityKind = _changeDetail.ActionName,
+            ActivityDateUTC = DateTime.UtcNow,
+            Comment = $"Action Triggered by {_changeDetail.RequestSource}.  Vendor: {_changeDetail.VendorName}."
+        };
+        // 6:  Put a little dirt under their pillow.  (For the Dirt man)
+
+        return transformedSubscription;
     }
 }

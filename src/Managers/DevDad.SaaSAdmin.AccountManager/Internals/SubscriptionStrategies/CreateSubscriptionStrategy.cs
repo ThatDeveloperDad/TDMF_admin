@@ -10,12 +10,6 @@ namespace DevDad.SaaSAdmin.AccountManager.Internals.SubscriptionStrategies;
 
 sealed class CreateSubscriptionStrategy : ChangeStrategyBase
 {
-    // I normally wouldn't put the objects that I'm working on here at the class-global scope,
-    // But we're dealing with one instance of a CreateSubscriptionStrategy for each time we
-    // perform this operation, and the contextual validation methods will need access to these objects.
-    private CustomerSubscription? _subscriptionToUpdate;
-    private SubscriptionTemplateResource? _subscriptionTemplate; 
-    private SubscriptionActionDetail? _changeDetail;
 
     public CreateSubscriptionStrategy()
     {
@@ -23,7 +17,7 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
 
     public override string ActivityKind => SubscriptionChangeKinds.ActivityKind_Create;
 
-    public override ChangeStrategyResponse ApplyChange(ChangeStrategyRequest request)
+    /* public override ChangeStrategyResponse ApplyChange(ChangeStrategyRequest request)
     {
         CustomerSubscription? newSubscription = null;
         ChangeStrategyResponse response = new ChangeStrategyResponse(request, newSubscription);
@@ -32,7 +26,7 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
         string executionSite = $"{nameof(CreateSubscriptionStrategy)}.{nameof(ApplyChange)}{changeStep}";
 
         // Validate the request for the Create action.
-        var validationErrors = ValidateChangeRequest(request);
+        var validationErrors = ValidateRequest(request);
         response.AddErrors(validationErrors, executionSite);
         if(response.ShouldHaltProcess)
         {
@@ -57,47 +51,8 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
         response.Payload = newSubscription;
         response.ChangeCompleted = true;
         return response;
-    }
+    } */
 
-    /// <summary>
-    /// Encapsulates all the Validation passes into a single method.
-    /// 
-    /// Really just did this for readability's sake.
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    private IEnumerable<ServiceError> ValidateChangeRequest(ChangeStrategyRequest request)
-    {
-        List<ServiceError> errors = new();
-        
-        var requestErrors = new ChangeRequestValidator().Validate(request);
-        errors.AddRange(requestErrors);
-        if(requestErrors.Any(e=> e.Severity == ErrorSeverity.Error))
-        {
-            return errors;
-        }
-        
-        // At this point, we can assume that the request is valid, and we have the "parts"
-        // that we need.  We still need to make sure that those parts are correct for the
-        // requested transformation.  The Part validations all possibly require some
-        // access to the other parts, so we'll assign them to class-level variables now.
-        _subscriptionToUpdate = request.SubscriptionToUpdate;
-        _changeDetail = request.ChangeDetails;
-        _subscriptionTemplate = request.TargetTemplate;
-
-        // Make sure the requested ChangeDetail is well formed.
-        var changeDetailErrors = new SubscriptionActionValidator().Validate
-            (_changeDetail);
-        errors.AddRange(changeDetailErrors);
-
-        // Make sure the existing subscription data is appropriate for the Create action.
-        var subscriptionErrors = new SubscriptionValidator().Validate
-            (request.SubscriptionToUpdate,
-            ValidateCurrentSubscriptionForCreateAction);
-        errors.AddRange(subscriptionErrors);
-
-        return errors;
-    }
 
     /// <summary>
     /// Validates that the current subscirption is in an appropriate state
@@ -108,7 +63,7 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
     /// <param name="subscriptionTemplate">The template for the subscription type described in the actionDetail</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    private IEnumerable<ServiceError> ValidateCurrentSubscriptionForCreateAction(CustomerSubscription? subscriptionToUpdate)
+    protected override IEnumerable<ServiceError> ValidateSubscriptionForChange(CustomerSubscription? subscriptionToUpdate)
     {
         // What do we care about the "current" subscription, when we're creating a NEW subscription?
         List<ServiceError> errors = new();
@@ -179,4 +134,25 @@ sealed class CreateSubscriptionStrategy : ChangeStrategyBase
         return errors;
     }
     
+    protected override CustomerSubscription TransformSubscription(
+        CustomerSubscription subscription, 
+        SubscriptionTemplateResource template, 
+        SubscriptionActionDetail changeDetail)
+    {
+        CustomerSubscription newSubscription = _subscriptionTemplate!.BuildNewSubscription();
+        
+        // Now, we'll set the properties that don't (can't) come from the Template.
+        newSubscription.CurrentStatus = SubscriptionChangeKinds.ActivityStatusResult[_changeDetail!.ActionName];
+        newSubscription.SetUserId(_changeDetail!.CustomerProfileId);
+        SubscriptionActivity activityLogItem = new()
+        {
+            ActivityKind = _changeDetail.ActionName,
+            ActivityDateUTC = DateTime.UtcNow,
+            Comment = $"Action Triggered by {_changeDetail.RequestSource}.  Vendor: {_changeDetail.VendorName}."
+        };
+        newSubscription.History.Add(activityLogItem);
+
+        return newSubscription;
+    }
+
 }
