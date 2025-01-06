@@ -298,7 +298,7 @@ public class ModifySubscriptionUnitTests
         var response = managerToTest.ManageCustomerSubscriptionAsync(request)?.Result;
 
         StringBuilder sb = new();
-        foreach(string? error in response.ErrorReport)
+        foreach(string? error in response!.ErrorReport)
         {
             sb.AppendLine(error);
         }
@@ -395,7 +395,7 @@ public class ModifySubscriptionUnitTests
 
         // Get error messages into a string for easier debugging.
         StringBuilder sb = new();
-        foreach(string? error in response.ErrorReport)
+        foreach(string? error in response!.ErrorReport)
         {
             sb.AppendLine(error);
         }
@@ -420,7 +420,7 @@ public class ModifySubscriptionUnitTests
 
         // Get error messages into a string for easier debugging.
         StringBuilder sb = new();
-        foreach(string? error in response.ErrorReport)
+        foreach(string? error in response!.ErrorReport)
         {
             sb.AppendLine(error);
         }
@@ -479,7 +479,7 @@ public class ModifySubscriptionUnitTests
 
         // Get error messages into a string for easier debugging.
         StringBuilder sb = new();
-        foreach(string? error in response.ErrorReport)
+        foreach(string? error in response!.ErrorReport)
         {
             sb.AppendLine(error);
         }
