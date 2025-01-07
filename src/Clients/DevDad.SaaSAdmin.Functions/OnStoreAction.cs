@@ -46,6 +46,7 @@ namespace DevDad.SaaSAdmin.Functions
             bool signerCorrect = false;
 
             // TODO:  stuff the real value in .env / environment vars.
+            // this is a test-only value and won't be used in production.
             string signingSecret = "GGEDpCdG,VVFq!YoTsL+)_+L|kT?N[";
             // Need to has the signing secret w/ HMAC SHA256
             using(var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(signingSecret)))

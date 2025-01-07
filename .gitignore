@@ -404,3 +404,4 @@ src/.DS_Store
 src/Clients/.DS_Store
 src/Clients/DevDad.SaaSAdmin.API/appsettings.Development.json
 src/Tests/.DS_Store
+src/Clients/DevDad.SaaSAdmin.API/.env
