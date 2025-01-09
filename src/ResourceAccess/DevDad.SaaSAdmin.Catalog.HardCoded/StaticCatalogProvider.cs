@@ -71,7 +71,7 @@ public class StaticCatalogProvider : ICatalogAccess
         };
         freeTemplate.ResourceGrants.AddRange(GetFreeSubscriptionGrants());
         catalog.Add(freeTemplate);
-
+ 
         SubscriptionTemplateResource paidTemplate = new(){
             SKU = SKUS_TDMF_PD_MNTH,
             Name = "The DM's Familiar - Monthly Subscription",
