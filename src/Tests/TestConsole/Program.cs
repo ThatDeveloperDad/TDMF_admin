@@ -141,7 +141,7 @@ namespace TestConsole
 			CheckoutData checkoutData = new()
 			{
 				CustomerEntraId = "eb4668e2-941a-480b-b132-d9300e9e6124",
-				ProductIdToPurchase = 580657
+				ProductIdToPurchase = "580657"
 			};
 
 			CheckoutRequest request = new("RequestBuilderTesting", checkoutData);
