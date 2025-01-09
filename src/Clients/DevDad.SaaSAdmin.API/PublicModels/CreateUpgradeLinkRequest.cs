@@ -13,7 +13,7 @@ public class CreateUpgradeLinkRequest
     /// The customer's Id within the local system.
     /// (Corresponds with their Entra ID)
     /// </summary>
-    public string LocalCustomerId { get; set; }
+    public string LocalCustomerId { get; set; } = string.Empty;
 
     public int? LSCustomerId { get; set; }
 
@@ -27,7 +27,7 @@ public class CreateUpgradeLinkRequest
     /// </summary>
     public int VariantId { get; set; }
 
-    public string EmailAddress { get; set; }
+    public string EmailAddress { get; set; } = string.Empty;
 
     /// <summary>
     /// The ID of the LS Store
