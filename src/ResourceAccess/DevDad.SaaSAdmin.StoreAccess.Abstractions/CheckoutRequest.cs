@@ -8,6 +8,11 @@ public class CheckoutRequest : OperationRequest<CheckoutData>
     {
     }
 
+    public CheckoutRequest(OperationRequest request) : base(request)
+    {
+        
+    }
+
     public override string OperationName => "InvokeStoreAPI:CreateCheckout";
 
     public CheckoutData? CheckoutData 

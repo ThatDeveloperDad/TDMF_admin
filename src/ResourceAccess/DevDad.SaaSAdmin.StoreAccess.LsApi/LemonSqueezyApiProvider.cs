@@ -47,11 +47,17 @@ public class LemonSqueezyApiProvider : IStoreApiAccess
             return result;
         }
 
+        // We KNOW that this will evaluate to true, because we've already
+        // validated that expectation.
+        // If we hadn't checked for this specifically, we'd want to
+        // put this in a conditional and possibly bail out of the operation.
+        int.TryParse(request.CheckoutData!.ProductIdToPurchase, out int variantId);
+
         LsRequestBuilder requestBuilder = new LsRequestBuilder()
             .ForStore(_options.StoreId)
             .AsNewCheckout(
                     customerEntraId: request.CheckoutData!.CustomerEntraId,
-                    productVariantId: request.CheckoutData!.ProductIdToPurchase,
+                    productVariantId: variantId,
                     isTest: _options.IsTestMode
                 );
 
@@ -190,12 +196,24 @@ public class LemonSqueezyApiProvider : IStoreApiAccess
             errors.Add(error);
         }
 
-        if(data.ProductIdToPurchase <= 0)
+        if(string.IsNullOrWhiteSpace(data.ProductIdToPurchase))
         {
             var error = new ServiceError()
             {
                 ErrorKind = ServiceErrorKinds.RequestPayloadValidation,
                 Message = "The ProductIdToPurchase is required.",
+                Severity = ErrorSeverity.Error
+            };
+
+            errors.Add(error);
+        }
+
+        if(int.TryParse(data.ProductIdToPurchase, out int _)==false)
+        {
+            var error = new ServiceError()
+            {
+                ErrorKind = ServiceErrorKinds.RequestPayloadValidation,
+                Message = "LemonSqueezy requires an integer value for ProductId.",
                 Severity = ErrorSeverity.Error
             };
 

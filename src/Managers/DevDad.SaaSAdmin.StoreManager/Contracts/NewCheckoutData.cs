@@ -7,5 +7,7 @@ namespace DevDad.SaaSAdmin.StoreManager.Contracts;
 /// </summary>
 public class NewCheckoutData
 {
+    public string LocalUserId { get; set; } = string.Empty;
 
+    public string RequestedSku  {get;set;} = string.Empty;
 }

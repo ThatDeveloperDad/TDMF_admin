@@ -12,7 +12,7 @@ public class StartCheckoutRequest : OperationRequest<NewCheckoutData>
     {
     }
 
-    public override string OperationName => "RequestNewCheckoutSession";
+    public override string OperationName => "StoreManager.RequestNewCheckoutSession";
 
     public NewCheckoutData? CheckoutData
     {
