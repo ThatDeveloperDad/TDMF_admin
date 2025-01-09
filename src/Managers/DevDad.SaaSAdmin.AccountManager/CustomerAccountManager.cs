@@ -226,6 +226,10 @@ namespace DevDad.SaaSAdmin.AccountManager
 
 			customerProfile = changeSubscriptionResponse.Payload;
 
+			// If the inbound Request has a VendorCustomerId, we need to ensure that that
+			// ID is stored with the Customer's local account profile.
+			customerProfile = UpdateVendorIds(customerProfile, actionDetail);
+
 			//  5, 6, and 7 are the same for every request.  Do Those Here.
 			// 5:  Save the modified account back to local storage.
 			UserAccountResource accountResource = DomainObjectMapper
@@ -325,6 +329,30 @@ namespace DevDad.SaaSAdmin.AccountManager
 			response.Payload = updated;
 
 			return response;
+		}
+
+		private CustomerProfile UpdateVendorIds(CustomerProfile profile, SubscriptionActionDetail actionDetail)
+		{
+			string custidAtVendor = actionDetail.VendorSuppliedCustomerId;
+			string vendorName = actionDetail.VendorName;
+
+			if(string.IsNullOrWhiteSpace(custidAtVendor) == true)
+			{
+				return profile;
+			}
+
+			// If the profile already has an association for this person at this vendor, 
+			// we dont' need to do anything here.
+			if(profile.ExternalIds.Any(ei=> ei.Vendor == vendorName) == false)
+			{
+				profile.ExternalIds.Add(new ExternalId
+				{
+					Vendor = vendorName,
+					IdAtVendor = custidAtVendor
+				});
+			}
+
+			return profile;
 		}
 
 		private List<ServiceError> TryGetChangeDetail
