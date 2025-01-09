@@ -15,22 +15,14 @@ public class CreateUpgradeLinkRequest
     /// </summary>
     public string LocalCustomerId { get; set; } = string.Empty;
 
-    public int? LSCustomerId { get; set; }
-
-    /// <summary>
-    /// The ID of the subscirption product as listed in the LS Store.
-    /// </summary>
-    public int ProductId { get; set; }
-
     /// <summary>
     /// The ID of the prodiuct variant selected, as listed in the LS Store.
     /// </summary>
-    public int VariantId { get; set; }
-
-    public string EmailAddress { get; set; } = string.Empty;
+    public string TargetSubscriptionSku { get; set; } = string.Empty;
 
     /// <summary>
-    /// The ID of the LS Store
+    /// If we have this data, we'll include it in the Checkout request.
     /// </summary>
-    public int StoreId { get; set; }
+    public string EmailAddress { get; set; } = string.Empty;
+
 }

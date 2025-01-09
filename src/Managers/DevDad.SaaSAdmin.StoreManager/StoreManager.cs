@@ -17,12 +17,13 @@ public class StoreManager : IStoreManager
 
     private readonly ILogger<StoreManager>? _logger;
 
-    public StoreManager(IStoreApiAccess storeAccess
-    , ILoggerFactory? loggerFactory)
+    public StoreManager(IStoreApiAccess storeAccess,
+        ICatalogAccess catalogAccess,
+        ILoggerFactory? loggerFactory)
     {
         _storeAccess = storeAccess;
         _logger = loggerFactory?.CreateLogger<StoreManager>();
-        _catalogAccess = new StaticCatalogProvider();
+        _catalogAccess = catalogAccess;
     }
 
 
