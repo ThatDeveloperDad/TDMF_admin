@@ -67,30 +67,23 @@ public static class EndpointExtensions
         ILogger bootLogger)
     {
 
-        app.MapGet("/helloThere", (HttpContext httpContext) =>
+        // This endpoint will be called from the Application when a user clicks on an
+        // Upgrade to Paid Plan button.  It will send the basic information to the 
+        // Store API which will create a checkout session for that user, and return
+        // the URL to the checkout page at the Store Provider so that the user can
+        // fill in their payment information and complete the transaction.
+        app.MapPost("/startupgrade", (CreateUpgradeLinkRequest requestData, HttpContext httpContext) =>
         {
-            return httpContext.Response.WriteAsync("General Kenobi, I've been expecting you!");
-        })
-        .WithName("Greeting");
-        
-        var summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+            // Need a LemonSqueezy API Provider.
+            // Need to put that API Provider behind a Store Manager.
+            // For now, the manager will have one method:  
+            // StartCheckout, and it will receive a
+            // CreateUpgradeLinkRequest.
 
-        app.MapGet("/weatherforecast", (HttpContext httpContext) =>
-        {
-            /* var forecast =  Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                {
-                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    TemperatureC = Random.Shared.Next(-20, 55),
-                    Summary = summaries[Random.Shared.Next(summaries.Length)]
-                })
-                .ToArray(); */
-            return "It's winter in North Carolina.  Enjoy your milk sandwiches!";
-        })
-        .WithName("TommyCanYouSeeMe");
+            return httpContext.Response.WriteAsync("General Kenobi, I've been expecting you!");
+        });
+        
+        
 
         return app;
     }

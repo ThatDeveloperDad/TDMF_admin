@@ -13,5 +13,20 @@ public class InboundLsEvent
 
     public string EventJson { get; set; }
 
+    public string EventName { get; set; }
+
+    /// <summary>
+    /// A unique identifier for a webhook event instance.
+    /// Use this to prevent processing the same event multiple times.
+    /// </summary>
+    public string EventId { get; set; }
+
+    public int LS_CustomerId { get; set; }
+
+    public int LS_ProductId { get; set; }
+
+    public bool TestMode { get; set; }
+
+    
 
 }
