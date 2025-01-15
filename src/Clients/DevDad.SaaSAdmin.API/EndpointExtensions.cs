@@ -1,16 +1,18 @@
 using System;
-using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using DevDad.SaaSAdmin.AccountManager.Contracts;
+using DevDad.SaaSAdmin.API.ApiServices;
 using DevDad.SaaSAdmin.API.PublicModels;
+using DevDad.SaaSAdmin.iFX;
 using DevDad.SaaSAdmin.StoreManager.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ThatDeveloperDad.iFX.ServiceModel;
+using ThatDeveloperDad.iFX.Serialization;
 
 namespace DevDad.SaaSAdmin.API;
 
@@ -27,13 +29,12 @@ public static class EndpointExtensions
         IServiceProvider componentRegistry,
         ILogger bootLogger)
     {
-        IAccountManager? useCaseProvider = componentRegistry.GetService<IAccountManager>();
-        if(useCaseProvider == null)
-        {
-            string error = "The IAccountManager service could not be loaded from appServices.  Shutting down.";
-            bootLogger.LogError("The IAccountManager service could not be loaded from appServices.  Shutting down.");
-            throw new InvalidOperationException(error);
-        }
+        GuardRequiredServicesExist(app, componentRegistry, bootLogger);
+
+        WebhookRequestCache requestCache = app.Services.GetRequiredService<WebhookRequestCache>();
+
+        ILoggerFactory? lf = app.Services.GetRequiredService<ILoggerFactory>();
+        ILogger? logger = lf.CreateLogger("WebhookEndpoints");
 
         RouteGroupBuilder webHookRoutes = 
             app.MapGroup("/hooks")
@@ -41,11 +42,34 @@ public static class EndpointExtensions
             .WithName("WebhookProcessors");
 
         webHookRoutes.MapPost("/processStoreEvent"
-            , async Task<HttpContext>
+            , async Task<IResult?>
             (InboundLsEvent lsEvent, HttpContext context) =>
             {
-                await context.Response.WriteAsync("Processed New Entra Signup!");
-                return context;
+                IResult? operationResult = null;
+                IAccountManager acctMgr = componentRegistry.GetRequiredService<IAccountManager>();
+
+                // Disallow "test" events in non-development environments.
+                // Might want to reconsider this for testing in Azure though.
+                if(JsonUtilities.GetValueAtPath(lsEvent.EventJson, "$.data.test_mode") == "true"
+                  && app.Environment.IsDevelopment() == false)
+                {
+                    logger?.LogWarning("Received a test event in a non-development environment.  Ignoring.");
+                    return Results.BadRequest<string>("TestEvents are not allowed against non-development mode APIs.");
+                }
+
+                operationResult = await EndpointLogic
+                    .ProcessStoreEvent(
+                        storeRequestPayload: lsEvent, 
+                        accountService: acctMgr, 
+                        requestCache: requestCache, 
+                        endpointLogger: logger);
+
+                if(operationResult == null)
+                {
+                    operationResult = Results.NoContent();
+                }
+
+                return operationResult;
             })
             .WithName("ProcessStoreEvent");
 
@@ -150,6 +174,14 @@ public static class EndpointExtensions
         if(acctMgr == null)
         {
             string error = "The AccountManager service could not be loaded from appServices.  Shutting down.";
+            bootLogger.LogCritical(error);
+            throw new Exception(error);
+        }
+
+        WebhookRequestCache? cacheTest = app.Services.GetRequiredService<WebhookRequestCache>();
+        if(cacheTest == null)
+        {
+            string error = "The WebhookRequestCache service could not be loaded from appServices.  Shutting down.";
             bootLogger.LogCritical(error);
             throw new Exception(error);
         }

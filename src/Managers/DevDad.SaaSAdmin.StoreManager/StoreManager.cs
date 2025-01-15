@@ -76,7 +76,8 @@ public class StoreManager : IStoreManager
         CheckoutData apiData = new()
         {
             CustomerEntraId = request.CheckoutData!.LocalUserId,
-            ProductIdToPurchase = subData.VendorItemId!
+            ProductIdToPurchase = subData.VendorItemId!,
+            LocalSystemProductSku = subData.SKU
         };
 
         CheckoutRequest apiRequest = new(request)

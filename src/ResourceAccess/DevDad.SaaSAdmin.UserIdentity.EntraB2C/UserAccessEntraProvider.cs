@@ -13,7 +13,7 @@ namespace DevDad.SaaSAdmin.UserIdentity.EntraB2C;
 public class UserAccessEntraProvider 
     : IUserIdentityAccess, IDisposable
 {
-    public string IdentityVendor => "MS-Entra";
+    public string IdentityVendor => ExternalServiceVendors.MsEntra;
 
     private GraphServiceClient? _clientInstance;
     private ClientSecretCredential? _secret;

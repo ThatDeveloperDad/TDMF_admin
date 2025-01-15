@@ -58,6 +58,7 @@ public class LemonSqueezyApiProvider : IStoreApiAccess
             .AsNewCheckout(
                     customerEntraId: request.CheckoutData!.CustomerEntraId,
                     productVariantId: variantId,
+                    localSystemProductSku: request.CheckoutData.LocalSystemProductSku,
                     isTest: _options.IsTestMode
                 );
 

@@ -13,16 +13,18 @@ namespace DevDad.SaaSAdmin.StoreAccess.LsApi.LemonSqueezyModels;
 /// </summary>
 internal class LsCheckoutReq:ILsReqData
 {
-    public LsCheckoutReq(string customerEntraId, bool isTestMode) 
+    public LsCheckoutReq(string customerEntraId, string localSku, bool isTestMode) 
     {
         test_mode = isTestMode;
-        var customData = new LsCheckoutCustomData
+        // Add custom properties to be included in future subscription events here.
+        var localCustomerID = new LsCheckoutCustomData
         {
-            user_identity_id = customerEntraId
+            user_identity_id = customerEntraId,
+            local_sku = localSku
         };
 
         checkout_data = new Dictionary<string, object>();
-        checkout_data.Add("custom", customData);
+        checkout_data.Add("custom", localCustomerID);
         
     }
 
@@ -53,6 +55,7 @@ internal class LsCheckoutData
 internal class LsCheckoutCustomData
 {
     public string user_identity_id { get; set; } = string.Empty;
+    public string local_sku { get; set; } = string.Empty;
 }
 
 // template from API Docs:

@@ -1,12 +1,10 @@
 using System;
-using System.Linq;
-using System.Text.Json.Serialization;
 
-namespace DevDad.SaaSAdmin.API.PublicModels;
+namespace DevDad.SaaSAdmin.Functions.ApiModels;
 
-public class InboundLsEvent
+internal class LsEventData
 {
-    public InboundLsEvent()
+    public LsEventData()
     {
         EventJson = string.Empty;
         RequestId = string.Empty;
@@ -15,5 +13,4 @@ public class InboundLsEvent
     public string EventJson { get; set; }
 
     public string RequestId { get; set; }
-
 }

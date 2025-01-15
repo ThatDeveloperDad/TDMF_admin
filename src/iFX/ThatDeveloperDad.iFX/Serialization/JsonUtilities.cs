@@ -243,42 +243,52 @@ public static class JsonUtilities
     {
         string? queryResult = null;
 
-        // Using System.Text.Json and its child namespaces, 
-        // parse the jsonDoc and fetch whatever value is found at queryPath.
-        // If queryPath doesn't resolve to anything, return null.
-        
-        // Turn queryPath into a Stack<string> so we can walk it.
+        using JsonDocument doc = JsonDocument.Parse(jsonDoc);
+        queryResult = GetValueAtPath(doc, queryPath, logger);
+
+        return queryResult;
+    }
+
+    private static Queue<string> ConvertPathToQueue(string queryPath)
+    {
         Queue<string> pathSections = new();
         string[] pathParts = queryPath.Split('.');
         foreach (string part in pathParts)
         {
             // It's likely that the path starts with a '.', which represents the RootElement.
             // Since we'll be starting with the root element, we'll skip that.
-            if(string.IsNullOrWhiteSpace(part))
+            if (string.IsNullOrWhiteSpace(part))
             {
                 continue;
             }
             pathSections.Enqueue(part);
         }
 
+        return pathSections;
+    }
+
+    public static string? GetValueAtPath(
+        JsonDocument jsonDoc,
+        string queryPath,
+        ILogger? logger = null)
+    {
+        string? queryResult = null;
+
+        Queue<string> pathSections = ConvertPathToQueue(queryPath);
+
         try
         {
-            using(JsonDocument doc = JsonDocument.Parse(jsonDoc))
+            JsonElement root = jsonDoc.RootElement;
+            var elementResult = ClimbDocumentTree(root, pathSections);
+            if (elementResult != null)
             {
-                JsonElement root = doc.RootElement;
-                var elementResult = ClimbDocumentTree(root, pathSections);
-                if(elementResult != null)
-                {
-                    queryResult = elementResult.Value.ToString();
-                }
+                queryResult = elementResult.Value.ToString();
             }
-            
         }
         catch (JsonException ex)
         {
             logger?.LogError(ex, "Failed to parse JSON document.");
         }
-
         return queryResult;
     }
 

@@ -1,5 +1,6 @@
 
 using System;
+using DevDad.SaaSAdmin.API.ApiServices;
 using DotNetEnv;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -118,6 +119,10 @@ public class Program
         // non-domain-specific services to the utility provider, we'll do that
         // here.
         serviceBuilder.AddHttpClient();
+
+        serviceBuilder.AddMemoryCache();
+        serviceBuilder.AddSingleton<WebhookRequestCache>();
+        
         return appBuilder;
     }
 

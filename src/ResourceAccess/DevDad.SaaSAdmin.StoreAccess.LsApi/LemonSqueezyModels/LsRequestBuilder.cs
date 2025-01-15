@@ -30,11 +30,12 @@ internal class LsRequestBuilder
     public LsRequestBuilder AsNewCheckout(
             string customerEntraId, 
             int productVariantId,
+            string localSystemProductSku,
             bool isTest)
     {
         _requestType = "checkouts";
         _requestDataType = typeof(LsCheckoutReq);
-        _requestData = new LsCheckoutReq(customerEntraId, isTest);
+        _requestData = new LsCheckoutReq(customerEntraId, localSystemProductSku, isTest);
 
         LsNodeData variantNode = new()
         {
