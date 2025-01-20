@@ -41,6 +41,11 @@ public static class EndpointExtensions
             .WithDescription("Endpoints that are invoked by the Webhook Receivers when a request has been succesfully authenticated.")
             .WithName("WebhookProcessors");
 
+        webHookRoutes.MapGet("/pingTest", async (HttpContext context) =>
+        {
+            await context.Response.WriteAsync("Hello There from WebHookReceivers!");
+        });
+
         webHookRoutes.MapPost("/processStoreEvent"
             , async Task<IResult?>
             (InboundLsEvent lsEvent, HttpContext context) =>
@@ -96,6 +101,11 @@ public static class EndpointExtensions
 
         ILoggerFactory? lf = app.Services.GetRequiredService<ILoggerFactory>();
         ILogger? logger = lf.CreateLogger("ApplicationEndpoints");
+
+        app.MapGet("/pingTest", async (HttpContext context) =>
+        {
+            await context.Response.WriteAsync("Hello There from AppEndpoints!");
+        });
 
         // This endpoint will be called from the Application when a user clicks on an
         // Upgrade to Paid Plan button.  It will send the basic information to the 
