@@ -9,7 +9,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ThatDeveloperDad.iFX;
 
-
 namespace DevDad.SaaSAdmin.API;
 
 public class Program
@@ -24,7 +23,22 @@ public class Program
 		builder = AddUtilityServices(systemConfig, bootLogger, builder);	
 
         // Add services to the container.
-        builder.Services.AddAuthorization();
+        builder.Services.AddAuthorization(options => 
+        {
+            // Need to check the app Environment to determine if we're in Dev or Prod here.
+            var environment = builder.Environment;
+
+            if (environment.IsDevelopment())
+            {
+                options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
+                    policy => policy.RequireAssertion(_ => true));
+            }
+            else
+            {
+                options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
+                    policy => policy.RequireAuthenticatedUser());
+            }
+        });
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
