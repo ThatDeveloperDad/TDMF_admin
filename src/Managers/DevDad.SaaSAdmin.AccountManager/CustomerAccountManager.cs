@@ -53,6 +53,46 @@ namespace DevDad.SaaSAdmin.AccountManager
 			_catalogAccess = catalogAccess;
 		}
 
+		public async Task<CustomerProfileResponse> LoadCustomerProfileAsync(LoadAccountProfileRequest request)
+		{
+			CustomerProfileResponse response = new(request);
+
+			if(string.IsNullOrWhiteSpace(request.UserId) == true)
+			{
+				response.AddError(new ServiceError{
+					Message = "The UserId was null or empty.",
+					Severity = ErrorSeverity.Error,
+					Site = $"{nameof(CustomerAccountManager)}.{nameof(LoadCustomerProfileAsync)}",
+					ErrorKind = "UserIdNullError"
+				});
+				return response;
+			}
+
+			var builder = AccountBuilder();
+			
+			var builderResponse = await builder.LoadCustomerProfileAsync(request);
+			
+			if(builderResponse.HasErrors)
+			{
+				response.AddErrors(builderResponse);
+				return response;
+			}
+
+			response.Payload = builderResponse.Payload;
+
+			if(response.Payload == null)
+			{
+				response.AddError(new ServiceError{
+					Message = $"A Profile could not be loaded for user id {request.UserId}",
+					Severity = ErrorSeverity.Error,
+					Site = $"{nameof(CustomerAccountManager)}.{nameof(LoadCustomerProfileAsync)}",
+					ErrorKind = "ProfileLoadError"
+					});
+			}
+
+			return response;
+		}
+
 		public async Task<CustomerProfileResponse> LoadOrCreateCustomerProfileAsync(LoadAccountProfileRequest requestData)
 		{
 			CustomerProfileResponse response = new(requestData);
@@ -84,6 +124,7 @@ namespace DevDad.SaaSAdmin.AccountManager
 
 			return response;
 		}
+
 
 		public async Task<ManageSubscriptionResponse> ManageCustomerSubscriptionAsync(ManageSubscriptionRequest actionRequest)
 		{

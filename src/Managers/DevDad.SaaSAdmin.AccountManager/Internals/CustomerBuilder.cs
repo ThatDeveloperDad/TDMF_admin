@@ -35,6 +35,39 @@ internal class CustomerBuilder
         _changeStrategyFactory = new(logger);
     }
 
+    public async Task<CustomerProfileResponse> LoadCustomerProfileAsync(LoadAccountProfileRequest request)
+    {
+        CustomerProfileResponse response = new(request);
+        if(request == null || request.UserId == null)
+        {
+            response.AddError(new ServiceError
+            {
+                Message = "LoadCustomerProfileAsync requires a LoadAccountProfileRequest with a UserId.",
+                Severity = ErrorSeverity.Error,
+                Site = $"{nameof(CustomerBuilder)}.{nameof(LoadCustomerProfileAsync)}",
+                ErrorKind = "ArgumentNullError"
+            });
+            return response;
+        }
+
+        var accountResource = await _accountAccess.LoadUserAccountAsync(request.UserId);
+        if(accountResource == null)
+        {
+            response.AddError(new ServiceError
+            {
+                Message = $"Could not locate an account for user id {request.UserId}",
+                Severity = ErrorSeverity.Warning,
+                Site = $"{nameof(CustomerBuilder)}.{nameof(LoadCustomerProfileAsync)}",
+                ErrorKind = CustomerBuilderErrors.UserProfile_NotFound
+            });
+            return response;
+        }
+
+        var profile = DomainObjectMapper.MapEntities<UserAccountResource, CustomerProfile>(accountResource);
+        response.Payload = profile;
+        return response;
+    }
+
     public async Task<CustomerProfileResponse> LoadOrBuildCustomer(BuildProfileRequest request)
     {
         //First step is to try and load the identity information for the userId in the requestData.

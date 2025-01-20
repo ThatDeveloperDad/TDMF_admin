@@ -109,6 +109,46 @@ public static class EndpointExtensions
             await context.Response.WriteAsync("Hello There from AppEndpoints!");
         });
 
+        app.MapPost("/loadProfile", async Task<IResult> (LoadProfileRequest requestData, HttpContext httpContext) =>
+        {
+            IResult result = Results.NoContent();
+
+            try
+            {
+                IAccountManager? acctManager = componentRegistry.GetService<IAccountManager>();
+                LoadAccountProfileRequest mgrRequest = new("LoadUserProfile")
+                {
+                    UserId = requestData.UserEntraId
+                };
+
+                CustomerProfileResponse mgrResponse = await acctManager!.LoadCustomerProfileAsync(mgrRequest);
+
+                if(mgrResponse.HasErrors)
+                {
+                    result = Results.BadRequest(mgrResponse.ErrorReport);
+                    string errorReport = string.Join(Environment.NewLine, mgrResponse.ErrorReport);
+                    logger.LogError(errorReport);
+                }
+                else if(mgrResponse.Payload == null)
+                {
+                    result = Results.NotFound<string?>("No profile found for the provided Id.");
+                    logger.LogInformation($"No profile found for UserEntraId {requestData.UserEntraId}");
+                }
+                else
+                {
+                    result = Results.Ok(mgrResponse.Payload);
+                    logger.LogInformation($"Profile loaded successfully for UserEntraId {requestData.UserEntraId}");
+                }
+            }
+            catch(Exception ex)
+            {
+                logger?.LogError(ex, "An error occurred while processing the LoadProfile request.");
+                result = Results.InternalServerError<string?>("An error occurred while processing your request.");
+            }
+
+            return result;
+        });
+
         // This endpoint will be called from the Application when a user clicks on an
         // Upgrade to Paid Plan button.  It will send the basic information to the 
         // Store API which will create a checkout session for that user, and return
