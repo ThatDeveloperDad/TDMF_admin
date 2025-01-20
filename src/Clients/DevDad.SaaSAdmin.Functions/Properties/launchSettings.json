@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "DevDad.SaaSAdmin.Functions": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7007",
+      "launchBrowser": false
+    }
+  }
+}

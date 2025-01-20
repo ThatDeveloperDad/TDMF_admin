@@ -71,12 +71,13 @@ public class StaticCatalogProvider : ICatalogAccess
         };
         freeTemplate.ResourceGrants.AddRange(GetFreeSubscriptionGrants());
         catalog.Add(freeTemplate);
-
+ 
         SubscriptionTemplateResource paidTemplate = new(){
             SKU = SKUS_TDMF_PD_MNTH,
             Name = "The DM's Familiar - Monthly Subscription",
             Description = "Provides access to the RandomNPC Generator, up to 100 AI Descriptions per month, and Storage Space for up to 100 NPCs.",
             RenewalPeriodDays = SubscriptionRenewalFrequencies.Monthly,
+            VendorItemId = "580657",
             ConfersMembershipIn = new string[]
                 {
                     EntraGroups.FreeUsers, 

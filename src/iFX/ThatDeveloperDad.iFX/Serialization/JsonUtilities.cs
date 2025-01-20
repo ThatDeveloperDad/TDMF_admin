@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace ThatDeveloperDad.iFX.Serialization;
 
@@ -227,5 +229,171 @@ public static class JsonUtilities
         return filteredObject;
     }
 
+
+    /// <summary>
+    /// Parses a JSON document using a JSONPath query.
+    /// </summary>
+    /// <param name="jsonDoc"></param>
+    /// <param name="queryPath"></param>
+    /// <returns></returns>
+    public static string? GetValueAtPath(
+            string jsonDoc, 
+            string queryPath,
+            ILogger? logger = null)
+    {
+        string? queryResult = null;
+
+        using JsonDocument doc = JsonDocument.Parse(jsonDoc);
+        queryResult = GetValueAtPath(doc, queryPath, logger);
+
+        return queryResult;
+    }
+
+    private static Queue<string> ConvertPathToQueue(string queryPath)
+    {
+        Queue<string> pathSections = new();
+        string[] pathParts = queryPath.Split('.');
+        foreach (string part in pathParts)
+        {
+            // It's likely that the path starts with a '.', which represents the RootElement.
+            // Since we'll be starting with the root element, we'll skip that.
+            if (string.IsNullOrWhiteSpace(part))
+            {
+                continue;
+            }
+            pathSections.Enqueue(part);
+        }
+
+        return pathSections;
+    }
+
+    public static string? GetValueAtPath(
+        JsonDocument jsonDoc,
+        string queryPath,
+        ILogger? logger = null)
+    {
+        string? queryResult = null;
+
+        Queue<string> pathSections = ConvertPathToQueue(queryPath);
+
+        try
+        {
+            JsonElement root = jsonDoc.RootElement;
+            var elementResult = ClimbDocumentTree(root, pathSections);
+            if (elementResult != null)
+            {
+                queryResult = elementResult.Value.ToString();
+            }
+        }
+        catch (JsonException ex)
+        {
+            logger?.LogError(ex, "Failed to parse JSON document.");
+        }
+        return queryResult;
+    }
+
+    /// <summary>
+    /// Ooooh, recursion... SCAERY!
+    /// </summary>
+    /// <param name="currentNode"></param>
+    /// <param name="pathSections"></param>
+    /// <returns></returns>
+    private static JsonElement? ClimbDocumentTree(
+        JsonElement currentNode, 
+        Queue<string> pathSections,
+        ILogger? logger = null)
+    {
+        logger?.LogDebug($"Walking Path.  Current Node: {currentNode.ToString()}");
+        JsonElement? result = null;
+
+        if(currentNode.ValueKind == JsonValueKind.Undefined)
+        {
+            return result;
+        }
+
+        if(currentNode.ValueKind != JsonValueKind.Object &&
+            currentNode.ValueKind != JsonValueKind.Array)
+        {
+            return currentNode;
+        }
+
+        if(pathSections.Count == 0)
+        {
+            return result;
+        }
+        string currentPathPoint = pathSections.Dequeue();
+        if(currentPathPoint == "$")
+        {
+            // This is the root element.  We're already there.
+            return ClimbDocumentTree(currentNode, pathSections, logger);
+        }
+
+        if(currentPathPoint.Contains('['))
+        {
+            // This is an array index.
+            // We'll need to parse the index out of the string.
+            int openBracket = currentPathPoint.IndexOf('[');
+            int closeBracket = currentPathPoint.IndexOf(']');
+            string indexString = currentPathPoint.Substring(openBracket + 1, closeBracket - openBracket - 1);
+            int index = int.Parse(indexString);
+            currentPathPoint = currentPathPoint.Substring(0, openBracket);
+            
+            var requestedNode = currentNode.GetProperty(currentPathPoint);
+            if(requestedNode.ValueKind == JsonValueKind.Array)
+            {
+                if(requestedNode.GetArrayLength() > index)
+                {
+                    return ClimbDocumentTree(requestedNode[index], pathSections, logger);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+
+
+        if(currentNode.ValueKind == JsonValueKind.Object)
+        {
+            if(currentNode.TryGetProperty(currentPathPoint, out JsonElement nextElement))
+            {
+                return ClimbDocumentTree(nextElement, pathSections, logger);
+                /* if(nextElement.ValueKind == JsonValueKind.Object ||
+                    nextElement.ValueKind == JsonValueKind.Array)
+                {
+                    return ClimbDocumentTree(nextElement, pathSections);
+                }
+                else 
+                {
+                    return ClimbDocumentTree(nextElement, pathSections);
+                } */
+            }
+            else
+            {
+                logger?.LogDebug("Things are being weird.  Let's enumerate the current element.");
+                foreach(JsonProperty prop in currentNode.EnumerateObject())
+                {
+                    logger?.LogDebug($"Property: {prop.Name}  Type: {prop.Value.ValueKind}");
+                }
+            }
+        }
+        else if(currentNode.ValueKind == JsonValueKind.Array)
+        {
+            foreach(JsonElement arrayElement in currentNode.EnumerateArray())
+            {
+                if(arrayElement.ValueKind == JsonValueKind.Object)
+                {
+                    if(arrayElement.TryGetProperty(currentPathPoint, out JsonElement nextElement))
+                    {
+                        return ClimbDocumentTree(nextElement, pathSections, logger);
+                    }
+                }
+            }
+        }
+       
+
+        return result;
+    }
 }
 

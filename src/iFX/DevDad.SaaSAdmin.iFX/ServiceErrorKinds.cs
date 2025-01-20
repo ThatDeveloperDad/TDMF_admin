@@ -9,4 +9,6 @@ public class ServiceErrorKinds
     public const string RequestPayloadValidation = "RequestPayloadValidation";
 
     public const string StepFailed = "StepFailed:";
+
+    public const string ApiError = "ApiError";
 }

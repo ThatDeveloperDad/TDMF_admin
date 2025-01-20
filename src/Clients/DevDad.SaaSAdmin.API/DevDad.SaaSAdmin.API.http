@@ -1,0 +1,9 @@
+@DevDad.SaaSAdmin.API_HostAddress = http://localhost:5083
+
+GET {{DevDad.SaaSAdmin.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+GET {{DevDad.SaaSAdmin.API_HostAddress}}/hellothere/
+Accept: application/json
+
+###

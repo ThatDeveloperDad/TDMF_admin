@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../Managers/DevDad.SaaSAdmin.StoreManager/DevDad.SaaSAdmin.StoreManager.csproj" />
+    <ProjectReference Include="../../ResourceAccess/DevDad.SaaSAdmin.Catalog.Abstractions/DevDad.SaaSAdmin.Catalog.Abstractions.csproj" />
+    <ProjectReference Include="../../ResourceAccess/DevDad.SaaSAdmin.Catalog.HardCoded/DevDad.SaaSAdmin.Catalog.HardCoded.csproj" />
+    <ProjectReference Include="../../ResourceAccess/DevDad.SaaSAdmin.StoreAccess.Abstractions/DevDad.SaaSAdmin.StoreAccess.Abstractions.csproj" />
+    <ProjectReference Include="../../ResourceAccess/DevDad.SaaSAdmin.StoreAccess.LsApi/DevDad.SaaSAdmin.StoreAccess.LsApi.csproj" />
+    <ProjectReference Include="../../ResourceAccess/DevDad.SaaSAdmin.UserAccountAccess.AzureTableProvider/DevDad.SaaSAdmin.UserAccountAccess.AzureTableProvider.csproj" />
+    <ProjectReference Include="../../ResourceAccess/DevDad.SaaSAdmin.UserIdentity.EntraB2C/DevDad.SaaSAdmin.UserIdentity.EntraB2C.csproj" />
+    <ProjectReference Include="..\..\iFX\ThatDeveloperDad.iFX\ThatDeveloperDad.iFX.csproj" />
+    <ProjectReference Include="..\..\Managers\DevDad.SaaSAdmin.AccountManager\DevDad.SaaSAdmin.AccountManager.csproj" />
+    <ProjectReference Include="..\..\ResourceAccess\DevDad.SaaSAdmin.RulesAccess.AzureTableProvider\DevDad.SaaSAdmin.RulesAccess.AzureTableProvider.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update=".env">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

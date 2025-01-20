@@ -26,6 +26,15 @@ public class SubscriptionTemplateResource
     /// </summary>
     public string SKU { get; set; }
 
+    /// <summary>
+    /// Represents the ItemID used in setting up a purchase of the subscription
+    /// within the ECommerce Vendor's systems.
+    /// 
+    /// With LemonSqueezy, this valur corresponds to the required variant_id
+    /// in the CreateCheckout call.
+    /// </summary>
+    public string? VendorItemId { get; set; }
+
     public string Name { get; set; }
 
     public string Description { get; set; }
