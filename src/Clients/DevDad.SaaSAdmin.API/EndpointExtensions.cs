@@ -43,6 +43,7 @@ public static class EndpointExtensions
 
         webHookRoutes.MapGet("/pingTest", async (HttpContext context) =>
         {
+            logger?.LogInformation("hooks/PingTest endpoint called.");
             await context.Response.WriteAsync("Hello There from WebHookReceivers!");
         });
 
@@ -104,6 +105,7 @@ public static class EndpointExtensions
 
         app.MapGet("/pingTest", async (HttpContext context) =>
         {
+            logger?.LogInformation("pingTest endpoint called.");
             await context.Response.WriteAsync("Hello There from AppEndpoints!");
         });
 
