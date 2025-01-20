@@ -147,7 +147,8 @@ public static class EndpointExtensions
             }
 
             return result;
-        });
+        })
+        .Accepts<LoadProfileRequest>("application/json");
 
         // This endpoint will be called from the Application when a user clicks on an
         // Upgrade to Paid Plan button.  It will send the basic information to the 
