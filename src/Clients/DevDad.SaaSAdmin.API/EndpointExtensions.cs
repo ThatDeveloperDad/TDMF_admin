@@ -13,6 +13,7 @@ using DevDad.SaaSAdmin.API.ApiServices;
 using DevDad.SaaSAdmin.API.PublicModels;
 using DevDad.SaaSAdmin.StoreManager.Contracts;
 using ThatDeveloperDad.iFX.Serialization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DevDad.SaaSAdmin.API;
 
@@ -109,7 +110,8 @@ public static class EndpointExtensions
             await context.Response.WriteAsync("Hello There from AppEndpoints!");
         });
 
-        app.MapPost("/loadProfile", async Task<IResult> (LoadProfileRequest requestData, HttpContext httpContext) =>
+        app.MapPost("/loadProfile", 
+        async Task<IResult> (LoadProfileRequest requestData, HttpContext httpContext) =>
         {
             IResult result = Results.NoContent();
 
@@ -148,7 +150,8 @@ public static class EndpointExtensions
 
             return result;
         })
-        .Accepts<LoadProfileRequest>("application/json");
+        .Accepts<LoadProfileRequest>("application/json")
+        .RequireAuthorization(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly);
 
         // This endpoint will be called from the Application when a user clicks on an
         // Upgrade to Paid Plan button.  It will send the basic information to the 
