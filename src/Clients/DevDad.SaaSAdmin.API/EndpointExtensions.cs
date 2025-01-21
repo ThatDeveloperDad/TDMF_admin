@@ -1,17 +1,17 @@
 using System;
-using System.Text.Json;
 using System.Threading.Tasks;
-using DevDad.SaaSAdmin.AccountManager.Contracts;
-using DevDad.SaaSAdmin.API.ApiServices;
-using DevDad.SaaSAdmin.API.PublicModels;
-using DevDad.SaaSAdmin.iFX;
-using DevDad.SaaSAdmin.StoreManager.Contracts;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using DevDad.SaaSAdmin.AccountManager.Contracts;
+using DevDad.SaaSAdmin.API.ApiServices;
+using DevDad.SaaSAdmin.API.PublicModels;
+using DevDad.SaaSAdmin.StoreManager.Contracts;
 using ThatDeveloperDad.iFX.Serialization;
 
 namespace DevDad.SaaSAdmin.API;
@@ -123,16 +123,16 @@ public static class EndpointExtensions
 
                 CustomerProfileResponse mgrResponse = await acctManager!.LoadCustomerProfileAsync(mgrRequest);
 
-                if(mgrResponse.HasErrors)
+                if(mgrResponse.Payload == null)
+                {
+                    result = Results.NotFound<string?>("No profile found for the provided Id.");
+                    logger.LogInformation($"No profile found for UserEntraId {requestData.UserEntraId}");
+                }
+                else if(mgrResponse.HasErrors)
                 {
                     result = Results.BadRequest(mgrResponse.ErrorReport);
                     string errorReport = string.Join(Environment.NewLine, mgrResponse.ErrorReport);
                     logger.LogError(errorReport);
-                }
-                else if(mgrResponse.Payload == null)
-                {
-                    result = Results.NotFound<string?>("No profile found for the provided Id.");
-                    logger.LogInformation($"No profile found for UserEntraId {requestData.UserEntraId}");
                 }
                 else
                 {

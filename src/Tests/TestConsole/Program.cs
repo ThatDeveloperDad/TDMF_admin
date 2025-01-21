@@ -1,16 +1,13 @@
 using System.Net.Http.Json;
-using DevDad.SaaSAdmin.AccountManager.Contracts;
-using DevDad.SaaSAdmin.iFX;
-using DevDad.SaaSAdmin.StoreAccess.Abstractions;
-using DevDad.SaaSAdmin.StoreAccess.LsApi;
+
 using DotNetEnv;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TestConsole.OtherTests;
-using ThatDeveloperDad.iFX;
-using ThatDeveloperDad.iFX.CollectionUtilities;
-using ThatDeveloperDad.iFX.DomainUtilities;
+using DevDad.SaaSAdmin.iFX;
+using DevDad.SaaSAdmin.StoreAccess.Abstractions;
+using DevDad.SaaSAdmin.StoreAccess.LsApi;
 using ThatDeveloperDad.iFX.Serialization;
 
 namespace TestConsole
@@ -114,7 +111,7 @@ namespace TestConsole
     static void TestHostedApi(ILogger logger)
     {
       string url = "https://tdmf-admin-api-f4a5caaydzgncqf4.eastus2-01.azurewebsites.net/loadProfile";
-      string userId = "a996d415-159c-47fa-ae5a-4b6db581ebb1";
+      string userId = "a0b66013-a5ef-462f-a812-3eb4aeacff66";
       var request = new 
       {
         UserEntraId = userId

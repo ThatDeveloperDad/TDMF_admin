@@ -1,12 +1,17 @@
 
 using System;
-using DevDad.SaaSAdmin.API.ApiServices;
-using DotNetEnv;
+
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Web;
+
+using DotNetEnv;
+
+using DevDad.SaaSAdmin.API.ApiServices;
 using ThatDeveloperDad.iFX;
 
 namespace DevDad.SaaSAdmin.API;
@@ -20,28 +25,9 @@ public class Program
         builder.Services.AddOpenApi();
         var bootLogger = CreateBootLogger();
 		IConfiguration systemConfig = LoadSystemConfiguration(bootLogger);
-		builder = AddUtilityServices(systemConfig, bootLogger, builder);	
-
-        // Add services to the container.
-        builder.Services.AddAuthorization(options => 
-        {
-            // Need to check the app Environment to determine if we're in Dev or Prod here.
-            var environment = builder.Environment;
-
-            if (environment.IsDevelopment())
-            {
-                options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
-                    policy => policy.RequireAssertion(_ => true));
-            }
-            else
-            {
-                options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
-                    policy => policy.RequireAuthenticatedUser());
-            }
-        });
-
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-
+		
+        builder = AddSecurityServices(systemConfig, bootLogger, builder);
+        builder = AddUtilityServices(systemConfig, bootLogger, builder);	
 
         var app = builder.Build();
 
@@ -84,6 +70,44 @@ public class Program
         app.Run();
     }
 
+    static WebApplicationBuilder AddSecurityServices(IConfiguration configuration,
+        ILogger bootLog,
+        WebApplicationBuilder appBuilder)
+    {
+        bootLog.LogTrace("Configuring AuthN and AuthZ ");
+        
+        appBuilder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(options => {
+            appBuilder.Configuration.Bind("AzureAd", options);
+            options.TokenValidationParameters.NameClaimType = "name";
+        },
+        options => {
+            appBuilder.Configuration.Bind("AzureAd", options);
+        });
+        bootLog.LogTrace("Configured MS Identity & JWT Bearer options.");
+
+        // Add services to the container.
+        appBuilder.Services.AddAuthorization(options => 
+        {
+            // Need to check the app Environment to determine if we're in Dev or Prod here.
+            var environment = appBuilder.Environment;
+
+            if (environment.IsDevelopment())
+            {
+                options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
+                    policy => policy.RequireAssertion(_ => true));
+                bootLog.LogTrace("Set policy to Wide Open for dev env.");
+            }
+            else
+            {
+                options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
+                    policy => policy.RequireAuthenticatedUser());
+                bootLog.LogTrace("Set policy to Restricted for prod env.");
+            }
+        });
+
+        return appBuilder;
+    }
 
     static WebApplicationBuilder AddUtilityServices(IConfiguration systemConfig,
 			ILogger bootLog,
