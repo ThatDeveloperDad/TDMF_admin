@@ -111,6 +111,7 @@ namespace TestConsole
     static void TestHostedApi(ILogger logger)
     {
       string url = "https://tdmf-admin-api-f4a5caaydzgncqf4.eastus2-01.azurewebsites.net/loadProfile";
+      //string url = "http://localhost:5083/loadProfile";
       string userId = "a0b66013-a5ef-462f-a812-3eb4aeacff66";
       var request = new 
       {

@@ -114,6 +114,13 @@ public static class EndpointExtensions
         async Task<IResult> (LoadProfileRequest requestData, HttpContext httpContext) =>
         {
             IResult result = Results.NoContent();
+            var user = httpContext.User;
+
+            if(user.Identity?.IsAuthenticated??false == false)
+            {
+                logger.LogWarning("Unauthorized request to loadProfile endpoint.");
+                return Results.Unauthorized();
+            }
 
             try
             {
