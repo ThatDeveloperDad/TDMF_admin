@@ -104,6 +104,7 @@ public class Program
                     policy => policy.RequireAuthenticatedUser()
                                     .RequireAssertion((AuthorizationHandlerContext context)=>
                                     {
+                                        bootLog.LogTrace("Evaluationg AuthZ Policy.");
                                         // Validate that the appId on the ConfidentialClientApp
                                         // is in the list of approved apps.
                                         string[] allowedCLients = configuration
@@ -114,11 +115,20 @@ public class Program
                                         string appId = context.User.FindFirst("appid")?.Value??string.Empty;
 
                                         if(appId == string.Empty)
-                                        {
+                                        {   bootLog.LogWarning("No AppId found in the JWT Token.  Denying access.");
                                             return false;
                                         }
 
-                                        return allowedCLients.Contains(appId);
+                                        bool appIdIsAllowed = allowedCLients.Contains(appId);   
+                                        if(!appIdIsAllowed)
+                                        {
+                                            bootLog.LogWarning($"AppId {appId} is not in the list of allowed clients.  Denying access.");
+                                        }
+                                        else
+                                        {
+                                            bootLog.LogInformation($"AppId {appId} is in the list of allowed clients.  Allowing access.");
+                                        }
+                                        return appIdIsAllowed;
                                     }));
                 bootLog.LogTrace("Set policy to Restricted for prod env.");
 
