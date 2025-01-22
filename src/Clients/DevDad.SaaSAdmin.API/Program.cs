@@ -13,6 +13,10 @@ using DotNetEnv;
 
 using DevDad.SaaSAdmin.API.ApiServices;
 using ThatDeveloperDad.iFX;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using System.Linq;
 
 namespace DevDad.SaaSAdmin.API;
 
@@ -32,7 +36,7 @@ public class Program
         var app = builder.Build();
 
         app.UseHttpsRedirection();
-
+        app.UseAuthentication();
         app.UseAuthorization();
 
         // All the services we'd registered in the Application's DI container are considered
@@ -79,7 +83,13 @@ public class Program
         appBuilder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddMicrosoftIdentityWebApi(options => {
             appBuilder.Configuration.Bind("AzureAd", options);
-            options.TokenValidationParameters.NameClaimType = "name";
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidAudience = configuration["AzureAd:Audience"],
+                ValidIssuer = $"{configuration["AzureAd:Instance"]}{configuration["AzureAd:TenantId"]}/v2.0"
+            };
         },
         options => {
             appBuilder.Configuration.Bind("AzureAd", options);
@@ -89,8 +99,32 @@ public class Program
         // Add services to the container.
         appBuilder.Services.AddAuthorization(options => 
         {
+
+            options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
+                    policy => policy.RequireAuthenticatedUser()
+                                    .RequireAssertion((AuthorizationHandlerContext context)=>
+                                    {
+                                        // Validate that the appId on the ConfidentialClientApp
+                                        // is in the list of approved apps.
+                                        string[] allowedCLients = configuration
+                                            .GetSection("AzureAd:AllowedClients")
+                                            .Get<string[]>()
+                                            ?? Array.Empty<string>();
+                                        
+                                        string appId = context.User.FindFirst("appid")?.Value??string.Empty;
+
+                                        if(appId == string.Empty)
+                                        {
+                                            return false;
+                                        }
+
+                                        return allowedCLients.Contains(appId);
+                                    }));
+                bootLog.LogTrace("Set policy to Restricted for prod env.");
+
+
             // Need to check the app Environment to determine if we're in Dev or Prod here.
-            var environment = appBuilder.Environment;
+            /* var environment = appBuilder.Environment;
 
             if (environment.IsDevelopment())
             {
@@ -101,9 +135,10 @@ public class Program
             else
             {
                 options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
-                    policy => policy.RequireAuthenticatedUser());
+                    policy => policy.RequireAuthenticatedUser()
+                                    .RequireScope("api-access"));
                 bootLog.LogTrace("Set policy to Restricted for prod env.");
-            }
+            } */
         });
 
         return appBuilder;

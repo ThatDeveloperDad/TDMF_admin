@@ -116,7 +116,7 @@ public static class EndpointExtensions
             IResult result = Results.NoContent();
             var user = httpContext.User;
 
-            if(user.Identity?.IsAuthenticated??false == false)
+            if(user.Identity?.IsAuthenticated == false)
             {
                 logger.LogWarning("Unauthorized request to loadProfile endpoint.");
                 return Results.Unauthorized();

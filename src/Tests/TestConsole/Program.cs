@@ -21,7 +21,7 @@ namespace TestConsole
 
 			//TestJsonDrill();
 			//TestRequestConstruction(bootLogger);
-			TestHostedApi(bootLogger);
+			
 
 			/* IConfiguration systemConfig = LoadSystemConfiguration(bootLogger);
 			IServiceProvider globalUtilities = BuildUtilityProvider(systemConfig, bootLogger);
@@ -108,25 +108,7 @@ namespace TestConsole
 			bootLogger.LogInformation("Nothing more to do.  Imma take a nap right here.");
 		}
 
-    static void TestHostedApi(ILogger logger)
-    {
-      string url = "https://tdmf-admin-api-f4a5caaydzgncqf4.eastus2-01.azurewebsites.net/loadProfile";
-      //string url = "http://localhost:5083/loadProfile";
-      string userId = "a0b66013-a5ef-462f-a812-3eb4aeacff66";
-      var request = new 
-      {
-        UserEntraId = userId
-      };
-
-      var apiCLient = new HttpClient();
-
-      var response = apiCLient.PostAsJsonAsync<object>(url, request).Result;
-
-      var responseContent = response.Content.ReadAsStringAsync().Result;
-
-      Console.WriteLine(response.StatusCode);
-      Console.WriteLine(responseContent);
-    }
+    
 
 		static void TestWebhookProcessor(ILogger logger)
 		{
