@@ -14,6 +14,7 @@ using DevDad.SaaSAdmin.API.PublicModels;
 using DevDad.SaaSAdmin.StoreManager.Contracts;
 using ThatDeveloperDad.iFX.Serialization;
 using Microsoft.AspNetCore.Authorization;
+using DevDad.SaaSAdmin.iFX;
 
 namespace DevDad.SaaSAdmin.API;
 
@@ -118,12 +119,12 @@ public static class EndpointExtensions
             try
             {
                 IAccountManager? acctManager = componentRegistry.GetService<IAccountManager>();
-                LoadAccountProfileRequest mgrRequest = new("LoadUserProfile")
+                LoadAccountProfileRequest mgrRequest = new("LoadOrCreateUserProfile")
                 {
                     UserId = requestData.UserEntraId
                 };
 
-                CustomerProfileResponse mgrResponse = await acctManager!.LoadCustomerProfileAsync(mgrRequest);
+                CustomerProfileResponse mgrResponse = await acctManager!.LoadOrCreateCustomerProfileAsync(mgrRequest);
 
                 if(mgrResponse.Payload == null)
                 {
@@ -138,7 +139,16 @@ public static class EndpointExtensions
                 }
                 else
                 {
-                    result = Results.Ok(mgrResponse.Payload);
+                    LoadProfileResponse apiResponse = new()
+                    {
+                        UserId = mgrResponse.Payload.UserId,
+                        DisplayName = mgrResponse.Payload.DisplayName,
+                        SubscriptionSku = mgrResponse.Payload
+                            .Subscription?.SKU
+                            ?? SubscriptionIdentifiers.SKUS_TDMF_FREE
+                    };
+
+                    result = Results.Ok(apiResponse);
                     logger.LogInformation($"Profile loaded successfully for UserEntraId {requestData.UserEntraId}");
                 }
             }

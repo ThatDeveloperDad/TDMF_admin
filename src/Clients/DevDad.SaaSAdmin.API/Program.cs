@@ -101,54 +101,37 @@ public class Program
         {
 
             options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
-                    policy => policy.RequireAuthenticatedUser()
-                                    .RequireAssertion((AuthorizationHandlerContext context)=>
-                                    {
-                                        bootLog.LogTrace("Evaluationg AuthZ Policy.");
-                                        // Validate that the appId on the ConfidentialClientApp
-                                        // is in the list of approved apps.
-                                        string[] allowedCLients = configuration
-                                            .GetSection("AzureAd:AllowedClients")
-                                            .Get<string[]>()
-                                            ?? Array.Empty<string>();
-                                        
-                                        string appId = context.User.FindFirst("appid")?.Value??string.Empty;
+                    policy => 
+                        policy.RequireAuthenticatedUser()
+                            .RequireAssertion((AuthorizationHandlerContext context)=>
+                            {
+                                bootLog.LogTrace("Evaluationg AuthZ Policy.");
+                                // Validate that the appId on the ConfidentialClientApp
+                                // is in the list of approved apps.
+                                string[] allowedClients = configuration
+                                    .GetSection("AzureAd:AllowedClients")
+                                    .Get<string[]>()
+                                    ?? Array.Empty<string>();
+                                
+                                string appId = context.User.FindFirst("appid")?.Value??string.Empty;
 
-                                        if(appId == string.Empty)
-                                        {   bootLog.LogWarning("No AppId found in the JWT Token.  Denying access.");
-                                            return false;
-                                        }
+                                if(appId == string.Empty)
+                                {   bootLog.LogWarning("No AppId found in the JWT Token.  Denying access.");
+                                    return false;
+                                }
 
-                                        bool appIdIsAllowed = allowedCLients.Contains(appId);   
-                                        if(!appIdIsAllowed)
-                                        {
-                                            bootLog.LogWarning($"AppId {appId} is not in the list of allowed clients.  Denying access.");
-                                        }
-                                        else
-                                        {
-                                            bootLog.LogInformation($"AppId {appId} is in the list of allowed clients.  Allowing access.");
-                                        }
-                                        return appIdIsAllowed;
-                                    }));
-                bootLog.LogTrace("Set policy to Restricted for prod env.");
-
-
-            // Need to check the app Environment to determine if we're in Dev or Prod here.
-            /* var environment = appBuilder.Environment;
-
-            if (environment.IsDevelopment())
-            {
-                options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
-                    policy => policy.RequireAssertion(_ => true));
-                bootLog.LogTrace("Set policy to Wide Open for dev env.");
-            }
-            else
-            {
-                options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
-                    policy => policy.RequireAuthenticatedUser()
-                                    .RequireScope("api-access"));
-                bootLog.LogTrace("Set policy to Restricted for prod env.");
-            } */
+                                bool appIdIsAllowed = allowedClients.Contains(appId);   
+                                if(!appIdIsAllowed)
+                                {
+                                    bootLog.LogWarning($"AppId {appId} is not in the list of allowed clients.  Denying access.");
+                                }
+                                else
+                                {
+                                    bootLog.LogInformation($"AppId {appId} is in the list of allowed clients.  Allowing access.");
+                                }
+                                return appIdIsAllowed;
+                            }));
+                bootLog.LogTrace("Set policy to Restricted for prod env.");         
         });
 
         return appBuilder;
