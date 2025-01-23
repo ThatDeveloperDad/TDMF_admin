@@ -112,6 +112,17 @@ namespace DevDad.SaaSAdmin.AccountManager
 
 			response.Payload = builderResponse.Payload;
 
+			// Get the user's current subscirption Sku.
+			// If there isn't one, default to the Free Sub SKU.
+			var userSubSku = builderResponse.Payload?.Subscription?.SKU
+				?? SubscriptionIdentifiers.SKUS_TDMF_FREE;
+
+			// Get the subscirption Tempalte for that SKU, and use it
+			// to ensure that the User is a member of the correct EntraID Groups
+			// for The DM's Familiar.
+			var skuTemplate = await _catalogAccess.GetCatalogItemAsync(userSubSku);
+			var reconciled = await TryReconcileUserMembership(requestData, response, requestData.UserId!, skuTemplate!);
+
 			if(response.Payload == null)
 			{
 				response.AddError(new ServiceError{
@@ -127,203 +138,217 @@ namespace DevDad.SaaSAdmin.AccountManager
 
 
 		public async Task<ManageSubscriptionResponse> ManageCustomerSubscriptionAsync(ManageSubscriptionRequest actionRequest)
-		{
-			ManageSubscriptionResponse thisResponse = new(actionRequest, null);
+        {
+            ManageSubscriptionResponse thisResponse = new(actionRequest, null);
 
-			// When a SubsriptionActionRequest arrives, we'll generally follow the same basic steps:
-			if(actionRequest == null)
-			{
-				ServiceError nullRequestPayload = new()
-				{
-					Message = "The SubscriptionActionRequest was null.",
-					Severity = ErrorSeverity.Error,
-					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
-					ErrorKind = "NullRequestPayload"
-				};
-				thisResponse.AddError(nullRequestPayload);
-				thisResponse.Payload = false;
-				return thisResponse;
-			}
+            // When a SubsriptionActionRequest arrives, we'll generally follow the same basic steps:
+            if (actionRequest == null)
+            {
+                ServiceError nullRequestPayload = new()
+                {
+                    Message = "The SubscriptionActionRequest was null.",
+                    Severity = ErrorSeverity.Error,
+                    Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
+                    ErrorKind = "NullRequestPayload"
+                };
+                thisResponse.AddError(nullRequestPayload);
+                thisResponse.Payload = false;
+                return thisResponse;
+            }
+
+            var requestErrors = TryGetChangeDetail(actionRequest, out SubscriptionActionDetail? actionDetail);
+
+            // now, we can interrogate the requestErrors and run a null-check on the details.
+            if (requestErrors.Any())
+            {
+                thisResponse.AddErrors(requestErrors);
+                thisResponse.Payload = false;
+                return thisResponse;
+            }
+
+            if (actionDetail == null)
+            {
+                ServiceError nullRequestPayload = new()
+                {
+                    Message = "The SubscriptionActionDetail is null.",
+                    Severity = ErrorSeverity.Error,
+                    Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
+                    ErrorKind = "NullRequestPayload"
+                };
+                thisResponse.AddError(nullRequestPayload);
+                thisResponse.Payload = false;
+                return thisResponse;
+            }
+
+            //  1 & 2 are the same for every request.  Do Those Here.
+            // 1:  Load the Profile of the identified Customer.
+            BuildProfileRequest buildProfRequest = new(actionRequest, actionRequest.CustomerProfileId);
+            CustomerProfileResponse builderResponse = await AccountBuilder().LoadOrBuildCustomer(buildProfRequest);
+
+            if (builderResponse.HasErrors)
+            {
+                thisResponse.AddErrors(builderResponse);
+                thisResponse.Payload = false;
+                return thisResponse;
+            }
+
+            CustomerProfile? customerProfile = builderResponse.Payload;
+
+            // If we can neither Load not Create a profile for the identified Customer, we need to bail now.
+            if (customerProfile == null)
+            {
+                ServiceError profileNotFound = new()
+                {
+                    Message = $"The Customer Profile {actionRequest.CustomerProfileId} was not found.",
+                    Severity = ErrorSeverity.Error,
+                    Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
+                    ErrorKind = "ProfileNotFound"
+                };
+                thisResponse.AddError(profileNotFound);
+                thisResponse.Payload = false;
+                return thisResponse;
+            }
+
+            string? userIdentityId = customerProfile.GetUserIdForVendor(_userIdentityAccess.IdentityVendor);
+            if (userIdentityId == null)
+            {
+                // Something Really, REALLY F***ed up happened to get to this edge case.
+                ServiceError noUserIdentityId = new()
+                {
+                    Message = $"The Customer Profile {actionRequest.CustomerProfileId} has no Id in the Identity Service.",
+                    Severity = ErrorSeverity.Error,
+                    Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
+                    ErrorKind = "NoUserIdentityId"
+                };
+                thisResponse.AddError(noUserIdentityId);
+                thisResponse.Payload = false;
+                return thisResponse;
+            }
+
+            // 2:  Load the Catalog Item that gives us the details for the Subscription SKU
+            SubscriptionTemplateResource? skuTemplate =
+                await _catalogAccess.GetCatalogItemAsync(actionDetail.SubscriptionSku);
+
+            // If we can't load the Template for the provided subscription SKU, we cannot continue.
+            if (skuTemplate == null)
+            {
+                ServiceError skuNotFound = new()
+                {
+                    Message = $"The Subscription SKU {actionDetail.SubscriptionSku} was not found in the Catalog.",
+                    Severity = ErrorSeverity.Error,
+                    Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
+                    ErrorKind = "SkuNotFound"
+                };
+                thisResponse.AddError(skuNotFound);
+                return thisResponse;
+            }
+
+            //  3 & 4 are going to be different for each Activity.  We'll use a Strategy Pattern for those.
+            // 3:  Make sure the Activity is applicable to the current Subscription Status
+            // 4:  Perform the Activity
+            ModifySubscriptionData changeSubData = new(customerProfile, actionDetail);
+            ModifySubscriptionRequest changeSubscriptionRequest = new(actionRequest, changeSubData);
+            var changeSubscriptionResponse = await AccountBuilder().PerformSubscriptionAction(changeSubscriptionRequest);
+
+            if (changeSubscriptionResponse.HasErrors)
+            {
+                thisResponse.AddErrors(changeSubscriptionResponse);
+                thisResponse.Payload = false;
+                return thisResponse;
+            }
+
+            if (changeSubscriptionResponse.HasWarnings)
+            {
+                thisResponse.AddErrors(changeSubscriptionResponse);
+            }
+
+            if (changeSubscriptionResponse.Payload == null)
+            {
+                ServiceError noChangeResult = new()
+                {
+                    Message = "The Change Subscription Activity did not return a result.",
+                    Severity = ErrorSeverity.Error,
+                    Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
+                    ErrorKind = "NoChangeResult"
+                };
+                thisResponse.AddError(noChangeResult);
+                thisResponse.Payload = false;
+                return thisResponse;
+            }
+
+            customerProfile = changeSubscriptionResponse.Payload;
+
+            // If the inbound Request has a VendorCustomerId, we need to ensure that that
+            // ID is stored with the Customer's local account profile.
+            customerProfile = UpdateVendorIds(customerProfile, actionDetail);
+
+            //  5, 6, and 7 are the same for every request.  Do Those Here.
+            // 5:  Save the modified account back to local storage.
+            UserAccountResource accountResource = DomainObjectMapper
+                .MapEntities<CustomerProfile, UserAccountResource>(customerProfile);
+            var saveResult = await _userAccountAccess.SaveUserAccountAsync(accountResource);
+            if (saveResult.Item2 != null)
+            {
+                thisResponse.AddError(new ServiceError
+                {
+                    Message = saveResult.Item2.Message,
+                    Severity = ErrorSeverity.Error,
+                    Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
+                    ErrorKind = "UserAccountSaveError"
+                });
+                return thisResponse;
+            }
+
+            // 6:  Reconcile the Authorization Groups that the customer SHOULD have membership in at the Identity Service.
+            //This facility doesn't exist yet.  We'll need to add it to the UserIdentityAccess service.
+            var reconciled = await TryReconcileUserMembership(actionRequest, thisResponse, userIdentityId, skuTemplate);
+
+            // 7:  Handle the result of all this stuff.
+            if (thisResponse.HasErrors)
+            {
+                thisResponse.Payload = false;
+                // Need a way to send an alert to a Human here.
+            }
+            else
+            {
+                thisResponse.Payload = true;
+            }
+
+            return thisResponse;
+        }
+
+        private async Task<bool> TryReconcileUserMembership(
+			OperationRequest actionRequest, 
+			OperationResponse thisResponse, 
+			string userIdentityId, 
+			SubscriptionTemplateResource skuTemplate)
+        {
+			bool result = false;
+
+            var reconcileData = new ReconcileMembershipsData
+            {
+                UserId = userIdentityId!,
+                ExpectedGroups = skuTemplate.ConfersMembershipIn
+            };
+
+            var reconcileGroupsRequest = new ReconcileMembershipsRequest
+                (actionRequest,
+                 reconcileData);
+
+            var reconcileResponse = await _userIdentityAccess.ReconcileUserMembershipsAsync(reconcileGroupsRequest);
+            if (reconcileResponse.HasErrors)
+            {
+                thisResponse.AddErrors(reconcileResponse);
+                
+            }
 			
-			var requestErrors = TryGetChangeDetail(actionRequest, out SubscriptionActionDetail? actionDetail);
+			result = reconcileResponse.Successful;
+            string reconcileLog = $"Reconciled User Memberships for {userIdentityId} in {actionRequest.WorkloadName}: Added {reconcileResponse.MembershipsAdded}, Removed {reconcileResponse.MembershipsRemoved}";
+            _logger?.LogInformation(reconcileLog);
+			return result;
+        }
 
-			// now, we can interrogate the requestErrors and run a null-check on the details.
-			if(requestErrors.Any())
-			{
-				thisResponse.AddErrors(requestErrors);
-				thisResponse.Payload = false;
-				return thisResponse;
-			}
-
-			if(actionDetail == null)
-			{
-				ServiceError nullRequestPayload = new()
-				{
-					Message = "The SubscriptionActionDetail is null.",
-					Severity = ErrorSeverity.Error,
-					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
-					ErrorKind = "NullRequestPayload"
-				};
-				thisResponse.AddError(nullRequestPayload);
-				thisResponse.Payload = false;
-				return thisResponse;
-			}
-			
-			//  1 & 2 are the same for every request.  Do Those Here.
-			// 1:  Load the Profile of the identified Customer.
-			BuildProfileRequest buildProfRequest = new(actionRequest, actionRequest.CustomerProfileId);
-			CustomerProfileResponse builderResponse = await AccountBuilder().LoadOrBuildCustomer(buildProfRequest);
-
-			if(builderResponse.HasErrors)
-			{
-				thisResponse.AddErrors(builderResponse);
-				thisResponse.Payload = false;
-				return thisResponse;
-			}
-
-			CustomerProfile? customerProfile = builderResponse.Payload;
-			
-			// If we can neither Load not Create a profile for the identified Customer, we need to bail now.
-			if(customerProfile == null)
-			{
-				ServiceError profileNotFound = new()
-				{
-					Message = $"The Customer Profile {actionRequest.CustomerProfileId} was not found.",
-					Severity = ErrorSeverity.Error,
-					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
-					ErrorKind = "ProfileNotFound"
-				};
-				thisResponse.AddError(profileNotFound);
-				thisResponse.Payload = false;
-				return thisResponse;
-			}
-
-			string? userIdentityId = customerProfile.GetUserIdForVendor(_userIdentityAccess.IdentityVendor);
-			if(userIdentityId == null)
-			{
-				// Something Really, REALLY F***ed up happened to get to this edge case.
-				ServiceError noUserIdentityId = new()
-				{
-					Message = $"The Customer Profile {actionRequest.CustomerProfileId} has no Id in the Identity Service.",
-					Severity = ErrorSeverity.Error,
-					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
-					ErrorKind = "NoUserIdentityId"
-				};
-				thisResponse.AddError(noUserIdentityId);
-				thisResponse.Payload = false;
-				return thisResponse;
-			}
-
-			// 2:  Load the Catalog Item that gives us the details for the Subscription SKU
-			SubscriptionTemplateResource? skuTemplate = 
-				await _catalogAccess.GetCatalogItemAsync(actionDetail.SubscriptionSku);
-			
-			// If we can't load the Template for the provided subscription SKU, we cannot continue.
-			if(skuTemplate == null)
-			{
-				ServiceError skuNotFound = new()
-				{
-					Message = $"The Subscription SKU {actionDetail.SubscriptionSku} was not found in the Catalog.",
-					Severity = ErrorSeverity.Error,
-					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
-					ErrorKind = "SkuNotFound"
-				};
-				thisResponse.AddError(skuNotFound);
-				return thisResponse;
-			}
-
-			//  3 & 4 are going to be different for each Activity.  We'll use a Strategy Pattern for those.
-			// 3:  Make sure the Activity is applicable to the current Subscription Status
-			// 4:  Perform the Activity
-			ModifySubscriptionData changeSubData = new(customerProfile, actionDetail);
-			ModifySubscriptionRequest changeSubscriptionRequest = new(actionRequest, changeSubData);
-			var changeSubscriptionResponse = await AccountBuilder().PerformSubscriptionAction(changeSubscriptionRequest);
-			
-			if(changeSubscriptionResponse.HasErrors)
-			{
-				thisResponse.AddErrors(changeSubscriptionResponse);
-				thisResponse.Payload = false;
-				return thisResponse;
-			}
-
-			if(changeSubscriptionResponse.HasWarnings)
-			{
-				thisResponse.AddErrors(changeSubscriptionResponse);
-			}
-
-			if(changeSubscriptionResponse.Payload == null)
-			{
-				ServiceError noChangeResult = new()
-				{
-					Message = "The Change Subscription Activity did not return a result.",
-					Severity = ErrorSeverity.Error,
-					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
-					ErrorKind = "NoChangeResult"
-				};
-				thisResponse.AddError(noChangeResult);
-				thisResponse.Payload = false;
-				return thisResponse;
-			}
-
-			customerProfile = changeSubscriptionResponse.Payload;
-
-			// If the inbound Request has a VendorCustomerId, we need to ensure that that
-			// ID is stored with the Customer's local account profile.
-			customerProfile = UpdateVendorIds(customerProfile, actionDetail);
-
-			//  5, 6, and 7 are the same for every request.  Do Those Here.
-			// 5:  Save the modified account back to local storage.
-			UserAccountResource accountResource = DomainObjectMapper
-				.MapEntities<CustomerProfile, UserAccountResource>(customerProfile);
-			var saveResult = await _userAccountAccess.SaveUserAccountAsync(accountResource);
-			if(saveResult.Item2 != null)
-			{
-				thisResponse.AddError(new ServiceError{
-					Message = saveResult.Item2.Message,
-					Severity = ErrorSeverity.Error,
-					Site = $"{nameof(CustomerAccountManager)}.{nameof(ManageCustomerSubscriptionAsync)}",
-					ErrorKind = "UserAccountSaveError"
-				});
-				return thisResponse;
-			}
-
-			// 6:  Reconcile the Authorization Groups that the customer SHOULD have membership in at the Identity Service.
-			//This facility doesn't exist yet.  We'll need to add it to the UserIdentityAccess service.
-			var reconcileData = new ReconcileMembershipsData
-			{
-				UserId = userIdentityId!,
-				ExpectedGroups = skuTemplate.ConfersMembershipIn
-			};
-			
-			var reconcileGroupsRequest = new ReconcileMembershipsRequest
-				(actionRequest,
-				 reconcileData);
-
-			var reconcileResponse = await _userIdentityAccess.ReconcileUserMembershipsAsync(reconcileGroupsRequest);
-			if(reconcileResponse.HasErrors)
-			{
-				thisResponse.AddErrors(reconcileResponse);
-				thisResponse.Payload = false;
-			}
-
-			string reconcileLog = $"Reconciled User Memberships for {userIdentityId} in {actionRequest.WorkloadName}: Added {reconcileResponse.MembershipsAdded}, Removed {reconcileResponse.MembershipsRemoved}";
-			_logger?.LogInformation(reconcileLog);
-
-			// 7:  Handle the result of all this stuff.
-			if(thisResponse.HasErrors)
-			{
-				thisResponse.Payload = false;
-				// Need a way to send an alert to a Human here.
-			}
-			else
-			{
-				thisResponse.Payload = true;
-			}
-
-			return thisResponse;
-		}
-
-		public async Task<CustomerProfileResponse> StoreCustomerProfileAsync(SaveAccountProfileRequest request)
+        public async Task<CustomerProfileResponse> StoreCustomerProfileAsync(SaveAccountProfileRequest request)
 		{
 			CustomerProfileResponse response = new(request);
 

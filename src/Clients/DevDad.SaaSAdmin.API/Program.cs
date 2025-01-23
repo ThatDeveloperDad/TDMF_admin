@@ -1,13 +1,22 @@
 
 using System;
-using DevDad.SaaSAdmin.API.ApiServices;
-using DotNetEnv;
+
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Web;
+
+using DotNetEnv;
+
+using DevDad.SaaSAdmin.API.ApiServices;
 using ThatDeveloperDad.iFX;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using System.Linq;
 
 namespace DevDad.SaaSAdmin.API;
 
@@ -20,33 +29,14 @@ public class Program
         builder.Services.AddOpenApi();
         var bootLogger = CreateBootLogger();
 		IConfiguration systemConfig = LoadSystemConfiguration(bootLogger);
-		builder = AddUtilityServices(systemConfig, bootLogger, builder);	
-
-        // Add services to the container.
-        builder.Services.AddAuthorization(options => 
-        {
-            // Need to check the app Environment to determine if we're in Dev or Prod here.
-            var environment = builder.Environment;
-
-            if (environment.IsDevelopment())
-            {
-                options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
-                    policy => policy.RequireAssertion(_ => true));
-            }
-            else
-            {
-                options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
-                    policy => policy.RequireAuthenticatedUser());
-            }
-        });
-
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-
+		
+        builder = AddSecurityServices(systemConfig, bootLogger, builder);
+        builder = AddUtilityServices(systemConfig, bootLogger, builder);	
 
         var app = builder.Build();
 
         app.UseHttpsRedirection();
-
+        app.UseAuthentication();
         app.UseAuthorization();
 
         // All the services we'd registered in the Application's DI container are considered
@@ -84,6 +74,68 @@ public class Program
         app.Run();
     }
 
+    static WebApplicationBuilder AddSecurityServices(IConfiguration configuration,
+        ILogger bootLog,
+        WebApplicationBuilder appBuilder)
+    {
+        bootLog.LogTrace("Configuring AuthN and AuthZ ");
+        
+        appBuilder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(options => {
+            appBuilder.Configuration.Bind("AzureAd", options);
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidAudience = configuration["AzureAd:Audience"],
+                ValidIssuer = $"{configuration["AzureAd:Instance"]}{configuration["AzureAd:TenantId"]}/v2.0"
+            };
+        },
+        options => {
+            appBuilder.Configuration.Bind("AzureAd", options);
+        });
+        bootLog.LogTrace("Configured MS Identity & JWT Bearer options.");
+
+        // Add services to the container.
+        appBuilder.Services.AddAuthorization(options => 
+        {
+
+            options.AddPolicy(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly, 
+                    policy => 
+                        policy.RequireAuthenticatedUser()
+                            .RequireAssertion((AuthorizationHandlerContext context)=>
+                            {
+                                bootLog.LogTrace("Evaluationg AuthZ Policy.");
+                                // Validate that the appId on the ConfidentialClientApp
+                                // is in the list of approved apps.
+                                string[] allowedClients = configuration
+                                    .GetSection("AzureAd:AllowedClients")
+                                    .Get<string[]>()
+                                    ?? Array.Empty<string>();
+                                
+                                string appId = context.User.FindFirst("appid")?.Value??string.Empty;
+
+                                if(appId == string.Empty)
+                                {   bootLog.LogWarning("No AppId found in the JWT Token.  Denying access.");
+                                    return false;
+                                }
+
+                                bool appIdIsAllowed = allowedClients.Contains(appId);   
+                                if(!appIdIsAllowed)
+                                {
+                                    bootLog.LogWarning($"AppId {appId} is not in the list of allowed clients.  Denying access.");
+                                }
+                                else
+                                {
+                                    bootLog.LogInformation($"AppId {appId} is in the list of allowed clients.  Allowing access.");
+                                }
+                                return appIdIsAllowed;
+                            }));
+                bootLog.LogTrace("Set policy to Restricted for prod env.");         
+        });
+
+        return appBuilder;
+    }
 
     static WebApplicationBuilder AddUtilityServices(IConfiguration systemConfig,
 			ILogger bootLog,
