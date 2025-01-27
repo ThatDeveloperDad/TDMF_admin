@@ -56,14 +56,7 @@ public static class EndpointExtensions
                 IResult? operationResult = null;
                 IAccountManager acctMgr = componentRegistry.GetRequiredService<IAccountManager>();
 
-                // Disallow "test" events in non-development environments.
-                // Might want to reconsider this for testing in Azure though.
-                if(JsonUtilities.GetValueAtPath(lsEvent.EventJson, "$.data.test_mode") == "true"
-                  && app.Environment.IsDevelopment() == false)
-                {
-                    logger?.LogWarning("Received a test event in a non-development environment.  Ignoring.");
-                    return Results.BadRequest<string>("TestEvents are not allowed against non-development mode APIs.");
-                }
+                
 
                 operationResult = await EndpointLogic
                     .ProcessStoreEvent(
@@ -79,13 +72,14 @@ public static class EndpointExtensions
 
                 return operationResult;
             })
-            .WithName("ProcessStoreEvent");
+            .WithName("ProcessStoreEvent")
+            .RequireAuthorization(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly);
 
-        webHookRoutes.MapPost("/processNewEntraSignup", async (HttpContext context) =>
+        /* webHookRoutes.MapPost("/processNewEntraSignup", async (HttpContext context) =>
         {
             await context.Response.WriteAsync("Processed New Entra Signup!");
         })
-        .WithName("ProcessNewEntraSignup");
+        .WithName("ProcessNewEntraSignup"); */
 
         return app;
     }
@@ -155,7 +149,9 @@ public static class EndpointExtensions
             catch(Exception ex)
             {
                 logger?.LogError(ex, "An error occurred while processing the LoadProfile request.");
-                result = Results.InternalServerError<string?>("An error occurred while processing your request.");
+                result = Results.Problem(
+                    detail: "An error occurred while processing your request.",
+                    statusCode: StatusCodes.Status500InternalServerError);
             }
 
             return result;
@@ -180,7 +176,9 @@ public static class EndpointExtensions
                 if(storeMgr==null)
                 {
                     logger.LogCritical("The StoreManager could not be instantiated to perform the operation.");
-                    return Results.InternalServerError<string?>("An error occurred while processing your request.");
+                    return Results.Problem(
+                        detail: "An error occurred while processing your request.",
+                        statusCode: StatusCodes.Status500InternalServerError);
                 }
                 // convert the inbound requestData into the type expected by the
                 // StoreManager.
@@ -195,7 +193,9 @@ public static class EndpointExtensions
 
                 if(mgrResponse == null)
                 {
-                    result = Results.InternalServerError<string?>("An error occurred while processing your request.");
+                    result = Results.Problem(
+                        detail: "An error occurred while processing your request.",
+                        statusCode: StatusCodes.Status500InternalServerError);
                     logger.LogError("The StoreManager could not be instantiated to perform the operation.");
                 }
                 else if(mgrResponse.HasErrors)
@@ -213,15 +213,15 @@ public static class EndpointExtensions
             catch(Exception ex)
             {
                 logger.LogError(ex, "An error occurred while processing the StartUpgrade request.");
-                result = Results.InternalServerError<string?>("An error occurred while processing your request.");
+                result = Results.Problem(
+                    detail:"An error occurred while processing your request.",
+                    statusCode: StatusCodes.Status500InternalServerError);
             }
             
             return result;
-        });
-        //TODO:  Sort out what we need to do to require Authorization on this call.
-        // Once we've done that, we need to make sure all callers are set up correctly.
-        // Probably require membership in a specific Entra Group.
-        // Add myself as a backdoor.
+        })
+        .RequireAuthorization(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly);
+        
 
         return app;
     }

@@ -1,7 +1,9 @@
+using DevDad.SaaSAdmin.Functions.LocalServices;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -10,13 +12,14 @@ builder.Configuration
     .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
+var apiOptions = new AdminApiOptions();
+builder.Configuration.GetSection("AdminApi").Bind(apiOptions);
+
+builder.Services.AddSingleton(apiOptions);
 builder.ConfigureFunctionsWebApplication();
 builder.Services.AddLogging();
-builder.Services.AddHttpClient();
+builder.Logging.AddConsole();
 
-// Application Insights isn't enabled by default. See https://aka.ms/AAt8mw4.
-// builder.Services
-//     .AddApplicationInsightsTelemetryWorkerService()
-//     .ConfigureFunctionsApplicationInsights();
+builder.Services.AddHttpClient();
 
 builder.Build().Run();
