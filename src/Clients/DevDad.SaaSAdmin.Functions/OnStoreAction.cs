@@ -47,7 +47,7 @@ namespace DevDad.SaaSAdmin.Functions
         }
 
         [Function("OnStoreAction")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req)
         {
             string apiEndpointPath = "hooks/processStoreEvent";
             IActionResult? result = null;
