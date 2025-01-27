@@ -406,3 +406,4 @@ src/Clients/DevDad.SaaSAdmin.API/appsettings.Development.json
 src/Tests/.DS_Store
 src/Clients/DevDad.SaaSAdmin.API/.env
 src/Clients/DevDad.SaaSAdmin.Functions/appsettings.Development.json
+src/Clients/DevDad.SaaSAdmin.Functions/.env
