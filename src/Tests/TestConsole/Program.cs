@@ -159,44 +159,7 @@ namespace TestConsole
 			
 		}
 
-		static void TestRequestConstruction(ILogger logger)
-		{
-			LsApiOptions options = new LsApiOptions()
-			{
-				StoreId = 132258,
-				IsTestMode = true,
-				BaseUrl = "https://api.lemonsqueezy.com",
-				ApiKey = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5NGQ1OWNlZi1kYmI4LTRlYTUtYjE3OC1kMjU0MGZjZDY5MTkiLCJqdGkiOiJlMTUxNThlODY5N2E1MTE0ODI5MjZhYWI2ZmE4MzYwMmYwOGQ2NGRmMjc2NDkwMGE5MTAxNzgzN2Q0ODIwYzg4ZTlkYzNjN2E0ZDQ5ZGIwYiIsImlhdCI6MTczNjE4NTEzMi41MDQ4OTQsIm5iZiI6MTczNjE4NTEzMi41MDQ4OTYsImV4cCI6MjA1MTcxNzkzMi40NzYzOTgsInN1YiI6IjM2OTM5ODUiLCJzY29wZXMiOltdfQ.bhRVApj3DTuhYi7DwA833c3WAA0asnEGe5KKfydBHJCvF6lzF0k95_Z51rJCQ646zs5YYTEjqV2QuP9r3YdRNYFGEFdamAqHNdPT6ZeU7tAD7ssYcH-fFU-VzGv6fQsK3n3NONFQmu_FGBdNKQzdD437T30aI19eM361w7NBRuw7j1F_b3wmF4o5OEbn1f0sIHqd4U7-fFQ94UbzWbg3gZuYTHeefKvE8XJgcQ7l46rR-rXUKUsH2tC3D9Qkfg86E1WI853vH1LEqQqbs5bniEQ1dJQ_o1xi4YH1bNVuCOCLwBb7Mal0Mmb0GUrSRvAfwPPMqJSkRbLEQoUpjRRIWZ422tE38VzTpA8POVUvMqIoC0WKYHlMQBG_8qOTRzMueEQ0zvO9fqRWcKgGFj6URQBISDTP_cMCPH5pfsYCGl8ETK-hmDOuBfLah56hlU38X8bqGu_dZ5InN3nuXJHbdkVKkFoomrHbQUANRWNSQXIQ9n3otoMdCsvFr313o96Q"
-			};
-
-			IStoreApiAccess storeAccess = 
-				new LemonSqueezyApiProvider(options, null, new HttpClient());
-
-			CheckoutData checkoutData = new()
-			{
-				CustomerEntraId = "a996d415-159c-47fa-ae5a-4b6db581ebb1",
-				ProductIdToPurchase = "580657",
-				LocalSystemProductSku = SubscriptionIdentifiers.SKUS_TDMF_PAID_MONTHLY
-			};
-
-			CheckoutRequest request = new("RequestBuilderTesting", checkoutData);
-
-			var result = storeAccess.StartCheckoutAsync(request).Result;
-
-			if(result.Successful)
-			{
-				Console.WriteLine(result.CheckoutUrl);
-			}
-			else
-			{
-				string errorReport = string.Join("\n", result.ErrorReport);
-				Console.WriteLine("Errors occurred.");
-				Console.WriteLine(errorReport);
-			}
-
-			Console.ReadLine();
-
-		}
+		
 
 		static void TestEntra()
 		{
