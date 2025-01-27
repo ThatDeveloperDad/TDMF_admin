@@ -1,18 +1,20 @@
 using System;
-using System.Text.Json;
 using System.Threading.Tasks;
-using DevDad.SaaSAdmin.AccountManager.Contracts;
-using DevDad.SaaSAdmin.API.ApiServices;
-using DevDad.SaaSAdmin.API.PublicModels;
-using DevDad.SaaSAdmin.iFX;
-using DevDad.SaaSAdmin.StoreManager.Contracts;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using DevDad.SaaSAdmin.AccountManager.Contracts;
+using DevDad.SaaSAdmin.API.ApiServices;
+using DevDad.SaaSAdmin.API.PublicModels;
+using DevDad.SaaSAdmin.StoreManager.Contracts;
 using ThatDeveloperDad.iFX.Serialization;
+using Microsoft.AspNetCore.Authorization;
+using DevDad.SaaSAdmin.iFX;
 
 namespace DevDad.SaaSAdmin.API;
 
@@ -109,34 +111,44 @@ public static class EndpointExtensions
             await context.Response.WriteAsync("Hello There from AppEndpoints!");
         });
 
-        app.MapPost("/loadProfile", async Task<IResult> (LoadProfileRequest requestData, HttpContext httpContext) =>
+        app.MapPost("/loadProfile", 
+        async Task<IResult> (LoadProfileRequest requestData, HttpContext httpContext) =>
         {
             IResult result = Results.NoContent();
 
             try
             {
                 IAccountManager? acctManager = componentRegistry.GetService<IAccountManager>();
-                LoadAccountProfileRequest mgrRequest = new("LoadUserProfile")
+                LoadAccountProfileRequest mgrRequest = new("LoadOrCreateUserProfile")
                 {
                     UserId = requestData.UserEntraId
                 };
 
-                CustomerProfileResponse mgrResponse = await acctManager!.LoadCustomerProfileAsync(mgrRequest);
+                CustomerProfileResponse mgrResponse = await acctManager!.LoadOrCreateCustomerProfileAsync(mgrRequest);
 
-                if(mgrResponse.HasErrors)
+                if(mgrResponse.Payload == null)
+                {
+                    result = Results.NotFound<string?>("No profile found for the provided Id.");
+                    logger.LogInformation($"No profile found for UserEntraId {requestData.UserEntraId}");
+                }
+                else if(mgrResponse.HasErrors)
                 {
                     result = Results.BadRequest(mgrResponse.ErrorReport);
                     string errorReport = string.Join(Environment.NewLine, mgrResponse.ErrorReport);
                     logger.LogError(errorReport);
                 }
-                else if(mgrResponse.Payload == null)
-                {
-                    result = Results.NotFound<string?>("No profile found for the provided Id.");
-                    logger.LogInformation($"No profile found for UserEntraId {requestData.UserEntraId}");
-                }
                 else
                 {
-                    result = Results.Ok(mgrResponse.Payload);
+                    LoadProfileResponse apiResponse = new()
+                    {
+                        UserId = mgrResponse.Payload.UserId,
+                        DisplayName = mgrResponse.Payload.DisplayName,
+                        SubscriptionSku = mgrResponse.Payload
+                            .Subscription?.SKU
+                            ?? SubscriptionIdentifiers.SKUS_TDMF_FREE
+                    };
+
+                    result = Results.Ok(apiResponse);
                     logger.LogInformation($"Profile loaded successfully for UserEntraId {requestData.UserEntraId}");
                 }
             }
@@ -148,7 +160,8 @@ public static class EndpointExtensions
 
             return result;
         })
-        .Accepts<LoadProfileRequest>("application/json");
+        .Accepts<LoadProfileRequest>("application/json")
+        .RequireAuthorization(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly);
 
         // This endpoint will be called from the Application when a user clicks on an
         // Upgrade to Paid Plan button.  It will send the basic information to the 
