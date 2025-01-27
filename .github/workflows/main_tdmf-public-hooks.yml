@@ -4,9 +4,6 @@
 name: Build and deploy Azure Function App - tdmf-public-hooks
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 env:
