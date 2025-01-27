@@ -1,13 +1,18 @@
+using System;
+using System.IO;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using DevDad.SaaSAdmin.Functions.ApiModels;
+using DevDad.SaaSAdmin.Functions.LocalServices;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using ThatDeveloperDad.iFX.Serialization;
 
 namespace DevDad.SaaSAdmin.Functions
 {
@@ -16,14 +21,29 @@ namespace DevDad.SaaSAdmin.Functions
         private readonly ILogger<OnStoreAction> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _config;
+        private readonly AdminApiOptions _apiOptions;
+
+        private readonly string _signingSecret;
 
         public OnStoreAction(ILogger<OnStoreAction> logger,
             IHttpClientFactory httpClientFactory,
-            IConfiguration config)
+            IConfiguration config,
+            AdminApiOptions apiOptions)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _config = config;
+            _apiOptions = apiOptions;
+
+            string? lsSecret = _config["LemonSqueezySigningSecret"];
+            if(string.IsNullOrWhiteSpace(lsSecret))
+            {
+                throw new InvalidOperationException("The LemonSqueezy signing secret is not configured.");
+            }
+            else
+            {
+                _signingSecret = lsSecret;
+            }
         }
 
         [Function("OnStoreAction")]
@@ -40,6 +60,15 @@ namespace DevDad.SaaSAdmin.Functions
                     rawBody = await reader.ReadToEndAsync();
                 }
 
+                // Disallow "test" events when system is not in test mode.
+                if(JsonUtilities
+                    .GetValueAtPath(rawBody, "$.data.test_mode") == "true"
+                && _config["LemonSqueezyIsTestMode"] != "true")
+                {
+                    _logger?.LogWarning("Received a test event in a non-development environment.  Ignoring.");
+                    return new BadRequestResult();
+                }
+
                 //Validate Request Signature.  If not valid, reject & return 401.
                 bool signerCorrect = ValidateRequestSignature(req.Headers["X-Signature"], rawBody);
                 
@@ -50,9 +79,10 @@ namespace DevDad.SaaSAdmin.Functions
                         EventJson = rawBody,
                         RequestId = req.HttpContext.TraceIdentifier
                     };
-
+                    string apiBearer = await AdminApiOptions.GetTokenAsync(_apiOptions, _logger);
                     
                     HttpClient apiClient = CreateApiClient();
+                    apiClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiBearer}");
                     string url = apiClient.BaseAddress + apiEndpointPath;
 
                     var apiResponse = await apiClient.PostAsJsonAsync(url, eventData);
@@ -79,7 +109,6 @@ namespace DevDad.SaaSAdmin.Functions
                 _logger?.LogError(e, "An error occurred while processing the request.");
                 result = new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-            
 
             _logger?.LogInformation("C# HTTP trigger function processed a request for OnStoreAction.");
             return result;
@@ -87,7 +116,7 @@ namespace DevDad.SaaSAdmin.Functions
 
         private HttpClient CreateApiClient()
         {
-            string? baseUrl = _config["adminApi:baseUrl"];
+            string? baseUrl = _apiOptions.ApiBaseUrl;
             if(string.IsNullOrWhiteSpace(baseUrl))
             {
                 throw new InvalidOperationException("The base URL for the Admin API is not configured.");
@@ -109,11 +138,8 @@ namespace DevDad.SaaSAdmin.Functions
 
             bool signerCorrect = false;
 
-            // TODO:  stuff the real value in .env / environment vars.
-            // this is a test-only value and won't be used in production.
-            string signingSecret = "GGEDpCdG,VVFq!YoTsL+)_+L|kT?N[";
-            // Need to has the signing secret w/ HMAC SHA256
-            using(var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(signingSecret)))
+            // Need to hash the signing secret w/ HMAC SHA256
+            using(var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_signingSecret)))
             {
                 var digest = hmac.ComputeHash(Encoding.UTF8.GetBytes(body));
                 var digestHex = BitConverter.ToString(digest).Replace("-", "").ToLower();
