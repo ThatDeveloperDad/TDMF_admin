@@ -80,7 +80,11 @@ namespace DevDad.SaaSAdmin.Functions
                         RequestId = req.HttpContext.TraceIdentifier
                     };
                     string apiBearer = await AdminApiOptions.GetTokenAsync(_apiOptions, _logger);
-                    
+                    if(string.IsNullOrWhiteSpace(apiBearer))
+                    {
+                        return new StatusCodeResult(StatusCodes.Status401Unauthorized);
+                    }
+
                     HttpClient apiClient = CreateApiClient();
                     apiClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiBearer}");
                     string url = apiClient.BaseAddress + apiEndpointPath;
