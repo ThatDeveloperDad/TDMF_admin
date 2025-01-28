@@ -47,7 +47,8 @@ public static class EndpointExtensions
         {
             logger?.LogInformation("hooks/PingTest endpoint called.");
             await context.Response.WriteAsync("Hello There from WebHookReceivers!");
-        });
+        })
+        .RequireAuthorization(ApiConstants.AuthorizationPolicies.AllowApiConsumersOnly);
 
         webHookRoutes.MapPost("/processStoreEvent"
             , async Task<IResult?>
