@@ -105,7 +105,7 @@ public class Program
                         policy.RequireAuthenticatedUser()
                             .RequireAssertion((AuthorizationHandlerContext context)=>
                             {
-                                bootLog.LogTrace("Evaluationg AuthZ Policy.");
+                                bootLog.LogTrace("Evaluating AuthZ Policy.");
                                 // Validate that the appId on the ConfidentialClientApp
                                 // is in the list of approved apps.
                                 string[] allowedClients = configuration
@@ -116,7 +116,14 @@ public class Program
                                 string appId = context.User.FindFirst("appid")?.Value??string.Empty;
 
                                 if(appId == string.Empty)
-                                {   bootLog.LogWarning("No AppId found in the JWT Token.  Denying access.");
+                                {   
+                                    bootLog.LogWarning("No AppId found in the JWT Token.  Denying access.");
+                                    
+                                    //Log out all claims in the current identity.
+                                    foreach(var claim in context.User.Claims)
+                                    {
+                                        bootLog.LogInformation($"Claim: {claim.Type} = {claim.Value}");
+                                    }
                                     return false;
                                 }
 
